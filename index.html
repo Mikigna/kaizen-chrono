@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Хронометраж & WIP</title>
+  <title>Кайдзен-Хронометраж & WIP</title>
   
   <!-- PWA Meta -->
   <meta name="theme-color" content="#09090b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D0%A5%D1%80%D0%BE%D0%BD%D0%BE%D0%BC%D0%B5%D1%82%D1%80%D0%B0%D0%B6%20%2B%20WIP%22%2C%22short_name%22%3A%22%D0%A5%D1%80%D0%BE%D0%BD%D0%BE%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2309090b%22%2C%22theme_color%22%3A%22%2309090b%22%7D">
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D0%9A%D0%B0%D0%B9%D0%B4%D0%B7%D0%B5%D0%BD-%D0%A5%D1%80%D0%BE%D0%BD%D0%BE%D0%BC%D0%B5%D1%82%D1%80%D0%B0%D0%B6%22%2C%22short_name%22%3A%22%D0%A5%D1%80%D0%BE%D0%BD%D0%BE%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2309090b%22%2C%22theme_color%22%3A%22%2309090b%22%7D">
 
   <!-- Tailwind CSS & Vue 3 via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -27,7 +27,6 @@
       font-family: 'JetBrains Mono', monospace;
       font-variant-numeric: tabular-nums;
     }
-    /* Кастомный скроллбар */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
@@ -41,9 +40,9 @@
   <header class="flex justify-between items-center mb-2 pt-1 border-b border-zinc-800 pb-3">
     <div class="flex items-center space-x-2">
       <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Фокус WIP:</span>
-      <span :class="wipCount >= 3 ? 'bg-amber-500/20 text-amber-400 border-amber-500/50' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'" 
+      <span :class="wipCount >= wipLimit ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'" 
             class="px-2 py-0.5 text-xs font-mono-digits font-bold rounded border transition-colors">
-        {{ wipCount }} / 3
+        {{ wipCount }} / {{ wipLimit }}
       </span>
     </div>
     
@@ -51,7 +50,7 @@
       <button @click="openManualAddModal" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Добавить вручную">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       </button>
-      <button @click="activeTab = 'settings'" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Настройки и цели">
+      <button @click="activeTab = activeTab === 'main' ? 'settings' : 'main'" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Настройки и цели">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
       </button>
     </div>
@@ -68,7 +67,7 @@
       </div>
       <div v-else-if="activeTimer" class="text-xs uppercase font-bold tracking-widest text-emerald-400 mb-1 flex items-center justify-center space-x-1">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>Учет времени: {{ formatDuration(activeElapsedSeconds) }}</span>
+        <span>Учет: {{ formatDuration(activeElapsedSeconds) }}</span>
       </div>
       <div v-else class="text-xs uppercase font-bold tracking-widest text-zinc-500 mb-1">Текущее время</div>
 
@@ -80,25 +79,52 @@
 
     <!-- 2. СЕЙЧАС ДЕЛАЮ / УПРАВЛЕНИЕ -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow-md">
-      <div>
-        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Цель / Операция</label>
-        <select v-model="selectedGoalId" :disabled="activeTimer !== null" 
-                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 transition">
-          <option value="" disabled>-- Выберите цель --</option>
-          <optgroup label="🔥 WIP Фокус (Лимит 3)" v-if="wipGoals.length > 0">
-            <option v-for="goal in wipGoals" :key="goal.id" :value="goal.id">
-              ⭐ {{ goal.name }} ({{ getCategoryName(goal.categoryId) }})
+      
+      <!-- Переключатель режима: По плану / Вне плана -->
+      <div class="grid grid-cols-2 gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs font-semibold">
+        <button @click="timerMode = 'planned'" :disabled="activeTimer !== null"
+                :class="timerMode === 'planned' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'"
+                class="py-1.5 rounded-lg transition disabled:opacity-50">
+          📋 По плану
+        </button>
+        <button @click="timerMode = 'unplanned'" :disabled="activeTimer !== null"
+                :class="timerMode === 'unplanned' ? 'bg-zinc-800 text-amber-400 shadow' : 'text-zinc-500 hover:text-zinc-300'"
+                class="py-1.5 rounded-lg transition disabled:opacity-50">
+          ⚡ Вне плана
+        </button>
+      </div>
+
+      <!-- Селектор: По плану (Цель -> Задача) -->
+      <div v-if="timerMode === 'planned'">
+        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Задача (по целям)</label>
+        <select v-model="selectedTaskId" :disabled="activeTimer !== null" 
+                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 transition truncate">
+          <option value="" disabled>-- Выберите задачу --</option>
+          <optgroup label="🔥 WIP Фокус" v-if="wipTasks.length > 0">
+            <option v-for="t in wipTasks" :key="t.id" :value="t.id">
+              ⭐ {{ t.name }} [{{ getGoalName(t.goalId) }}]
             </option>
           </optgroup>
-          <optgroup label="📋 Остальные цели">
-            <option v-for="goal in nonWipGoals" :key="goal.id" :value="goal.id">
-              {{ goal.name }} ({{ getCategoryName(goal.categoryId) }})
+          <optgroup label="📋 Остальные плановые задачи">
+            <option v-for="t in nonWipTasks" :key="t.id" :value="t.id">
+              {{ t.name }} [{{ getGoalName(t.goalId) }}]
             </option>
           </optgroup>
         </select>
       </div>
 
-      <!-- Кнопки действий -->
+      <!-- Поле ввода: Вне плана -->
+      <div v-else class="space-y-2">
+        <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1">Спонтанная операция</label>
+        <input v-model="unplannedTitle" :disabled="activeTimer !== null" placeholder="Например: Срочный звонок, Разбор почты..."
+               class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 disabled:opacity-60">
+        <label class="flex items-center space-x-2 text-xs text-zinc-400 cursor-pointer pt-0.5">
+          <input type="checkbox" v-model="unplannedIsWip" :disabled="activeTimer !== null" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0">
+          <span>Считать эту операцию в WIP-фокус</span>
+        </label>
+      </div>
+
+      <!-- Кнопки управления -->
       <div class="grid grid-cols-1 gap-2 pt-1">
         <div class="flex space-x-2">
           <!-- Старт / Стоп -->
@@ -112,7 +138,7 @@
           <!-- Разбить интервал (Сплит) -->
           <button v-if="activeTimer" @click="splitInterval" 
                   class="bg-amber-600 hover:bg-amber-500 active:scale-95 py-3.5 px-4 rounded-xl font-bold text-sm text-white transition flex items-center justify-center space-x-1"
-                  title="Записать текущий интервал и сразу начать новый">
+                  title="Записать отрезок и бесшовно продолжить">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             <span>Сплит</span>
           </button>
@@ -138,22 +164,24 @@
           Журнал пуст. Запустите таймер или добавьте запись вручную.
         </div>
 
-        <div v-for="(entry, index) in entries" :key="entry.id" 
+        <div v-for="entry in entries" :key="entry.id" 
              class="bg-zinc-900 border border-zinc-800/90 rounded-xl p-3 flex justify-between items-center hover:border-zinc-700 transition">
           <div class="min-w-0 flex-1 mr-2">
-            <div class="flex items-center space-x-1.5">
+            <div class="flex items-center space-x-1.5 flex-wrap">
               <span v-if="entry.isWip" class="text-[10px] font-bold bg-amber-500/20 text-amber-400 px-1 rounded">WIP</span>
+              <span v-if="entry.isUnplanned" class="text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1 rounded">Вне плана</span>
               <span v-if="entry.isPomodoro" class="text-[10px]">🍅</span>
-              <span class="text-sm font-semibold text-zinc-200 truncate">{{ entry.goalName }}</span>
+              <span class="text-sm font-semibold text-zinc-200 truncate">{{ entry.title }}</span>
             </div>
             <div class="text-[11px] text-zinc-500 mt-0.5 flex items-center space-x-2">
-              <span>{{ entry.categoryName }}</span>
+              <span v-if="!entry.isUnplanned">{{ entry.goalName }} → {{ entry.taskName }}</span>
+              <span v-else class="text-zinc-400">⚡ Спонтанная активность</span>
               <span>•</span>
               <span class="font-mono-digits">{{ formatTimeHM(entry.startTime) }} - {{ formatTimeHM(entry.endTime) }}</span>
             </div>
           </div>
 
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2">
             <span class="font-mono-digits text-xs font-bold text-zinc-300">{{ formatDuration(entry.durationSeconds) }}</span>
             <div class="flex space-x-1">
               <button @click="editEntry(entry)" class="p-1 text-zinc-500 hover:text-zinc-300">
@@ -169,92 +197,113 @@
     </div>
   </main>
 
-  <!-- ==================== ЭКРАН НАСТРОЕК / WIP / CRUD ==================== -->
+  <!-- ==================== ЭКРАН НАСТРОЕК / ИЕРАРХИЯ / WIP ==================== -->
   <main v-if="activeTab === 'settings'" class="flex-1 flex flex-col space-y-4">
     <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-white">Цели и Категории</h2>
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white">Управление структурой</h2>
       <button @click="activeTab = 'main'" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded-lg">
         ← Назад к таймеру
       </button>
     </div>
 
-    <!-- Управление Целями (с WIP-чекбоксами) -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+    <!-- 1. Настройка WIP Лимита -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2">
       <div class="flex justify-between items-center">
-        <h3 class="text-xs font-bold uppercase text-zinc-400">Список целей</h3>
-        <span class="text-xs text-amber-400 font-mono-digits">WIP: {{ wipCount }} / 3</span>
+        <h3 class="text-xs font-bold uppercase text-zinc-400">WIP Лимит (1 - 5)</h3>
+        <span class="text-xs font-mono-digits font-bold text-amber-400">{{ wipLimit }} задач в фокусе</span>
       </div>
+      <div class="flex justify-between space-x-2 pt-1">
+        <button v-for="n in [1,2,3,4,5]" :key="n" @click="setWipLimit(n)"
+                :class="wipLimit === n ? 'bg-amber-600 text-white font-bold' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'"
+                class="flex-1 py-1.5 rounded-xl text-xs transition font-mono-digits">
+          {{ n }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Иерархия: Цели и Задачи -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+      <h3 class="text-xs font-bold uppercase text-zinc-400">Цели и Задачи</h3>
 
       <!-- Добавить новую цель -->
       <form @submit.prevent="addGoal" class="flex space-x-2">
-        <input v-model="newGoalName" placeholder="Новая цель..." required
+        <input v-model="newGoalTitle" placeholder="Новая цель (стратегия)..." required
                class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-        <select v-model="newGoalCatId" required class="bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-2 text-xs text-white">
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
-        <button type="submit" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-xl text-xs font-bold text-white">+</button>
+        <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-xl text-xs font-bold text-white">+ Цель</button>
       </form>
 
-      <!-- Список целей с чекбоксами WIP -->
-      <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-        <div v-for="goal in goals" :key="goal.id" class="flex items-center justify-between bg-zinc-950 p-2.5 rounded-xl border border-zinc-800">
-          <div class="flex items-center space-x-2.5 min-w-0">
-            <label class="flex items-center space-x-1.5 cursor-pointer text-xs">
-              <input type="checkbox" :checked="goal.isWip" @change="toggleWip(goal)" class="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0">
-              <span :class="goal.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-400'">WIP</span>
-            </label>
-            <span class="text-xs text-zinc-200 truncate">{{ goal.name }}</span>
-            <span class="text-[10px] text-zinc-500">({{ getCategoryName(goal.categoryId) }})</span>
+      <!-- Добавить задачу в выбранную цель -->
+      <form @submit.prevent="addTask" class="flex space-x-2 pt-1 border-t border-zinc-800/80">
+        <input v-model="newTaskTitle" placeholder="Новая задача..." required
+               class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        <select v-model="newTaskGoalId" required class="bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-2 text-xs text-white max-w-[110px]">
+          <option v-for="g in goals" :key="g.id" :value="g.id">{{ g.name }}</option>
+        </select>
+        <button type="submit" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-xl text-xs font-bold text-white">+ Задачу</button>
+      </form>
+
+      <!-- Дерево Цели -> Задачи с чекбоксами WIP -->
+      <div class="space-y-3 max-h-56 overflow-y-auto pr-1 pt-1">
+        <div v-for="g in goals" :key="g.id" class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-2">
+          <div class="flex justify-between items-center border-b border-zinc-800/60 pb-1.5">
+            <span class="text-xs font-bold text-amber-400/90 truncate">🎯 {{ g.name }}</span>
+            <button v-if="goals.length > 1" @click="deleteGoal(g.id)" class="text-zinc-600 hover:text-rose-400 text-xs">✕</button>
           </div>
-          <button @click="deleteGoal(goal.id)" class="text-zinc-600 hover:text-rose-400 text-xs">✕</button>
+
+          <!-- Список задач внутри цели -->
+          <div class="space-y-1.5 pl-2">
+            <div v-for="t in getTasksByGoal(g.id)" :key="t.id" class="flex items-center justify-between text-xs">
+              <label class="flex items-center space-x-2 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="t.isWip" @change="toggleTaskWip(t)" class="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0">
+                <span :class="t.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-300'" class="truncate">{{ t.name }}</span>
+              </label>
+              <button @click="deleteTask(t.id)" class="text-zinc-600 hover:text-rose-400 text-[11px] pl-2">✕</button>
+            </div>
+            <div v-if="getTasksByGoal(g.id).length === 0" class="text-[11px] text-zinc-600 italic">Нет задач</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Управление Категориями -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-      <h3 class="text-xs font-bold uppercase text-zinc-400">Категории</h3>
-      <form @submit.prevent="addCategory" class="flex space-x-2">
-        <input v-model="newCategoryName" placeholder="Название категории..." required
-               class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-        <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-xl text-xs font-bold text-white">+</button>
-      </form>
-      <div class="flex flex-wrap gap-1.5">
-        <span v-for="cat in categories" :key="cat.id" class="bg-zinc-800 text-zinc-300 text-xs px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
-          <span>{{ cat.name }}</span>
-          <button v-if="categories.length > 1" @click="deleteCategory(cat.id)" class="text-zinc-500 hover:text-rose-400 text-[10px]">✕</button>
-        </span>
-      </div>
-    </div>
-
-    <!-- Экспорт / Импорт / Сброс -->
+    <!-- 3. Экспорт / Импорт / Сброс -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
-      <h3 class="text-xs font-bold uppercase text-zinc-400">Данные (Кайдзен-отчеты)</h3>
+      <h3 class="text-xs font-bold uppercase text-zinc-400">Данные (Кайдзен-аналитика)</h3>
       <div class="grid grid-cols-2 gap-2">
         <button @click="exportCSV" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2 rounded-xl border border-zinc-700">📊 Скачать CSV</button>
         <button @click="exportJSON" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2 rounded-xl border border-zinc-700">💾 Бэкап JSON</button>
       </div>
       <label class="block text-center bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs py-2 rounded-xl border border-dashed border-zinc-700 cursor-pointer">
-        <span>📥 Загрузить JSON</span>
+        <span>📥 Восстановить из JSON</span>
         <input type="file" @change="importJSON" accept=".json" class="hidden">
       </label>
-      <button @click="resetAllData" class="w-full text-rose-500 hover:text-rose-400 text-[11px] py-1">Очистить все данные</button>
+      <button @click="resetAllData" class="w-full text-rose-500 hover:text-rose-400 text-[11px] py-1">Очистить всю базу данных</button>
     </div>
   </main>
 
-  <!-- ==================== МОДАЛЬНОЕ ОКНО: РУЧНАЯ ЗАПИСЬ / РЕДАКТИРОВАНИЕ ==================== -->
+  <!-- ==================== МОДАЛКА: РУЧНАЯ ЗАПИСЬ / РЕДАКТИРОВАНИЕ ==================== -->
   <div v-if="showModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
       <h3 class="text-sm font-bold uppercase tracking-wider text-white">
-        {{ editingEntryId ? 'Редактировать запись' : 'Добавить операцию' }}
+        {{ editingEntryId ? 'Редактировать' : 'Добавить операцию' }}
       </h3>
       
       <div class="space-y-3">
-        <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Цель</label>
-          <select v-model="formGoalId" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white">
-            <option v-for="g in goals" :key="g.id" :value="g.id">{{ g.name }}</option>
+        <!-- Выбор типа: План / Вне плана -->
+        <div class="grid grid-cols-2 gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-[11px]">
+          <button @click="formIsUnplanned = false" :class="!formIsUnplanned ? 'bg-zinc-800 text-white' : 'text-zinc-500'" class="py-1 rounded-lg">По плану</button>
+          <button @click="formIsUnplanned = true" :class="formIsUnplanned ? 'bg-zinc-800 text-amber-400' : 'text-zinc-500'" class="py-1 rounded-lg">Вне плана</button>
+        </div>
+
+        <div v-if="!formIsUnplanned">
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Задача</label>
+          <select v-model="formTaskId" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white">
+            <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }} [{{ getGoalName(t.goalId) }}]</option>
           </select>
+        </div>
+
+        <div v-else>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Название операции</label>
+          <input v-model="formUnplannedTitle" placeholder="Спонтанное действие..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -272,6 +321,11 @@
           <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дата</label>
           <input type="date" v-model="formDate" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-1.5 text-xs text-white">
         </div>
+
+        <label class="flex items-center space-x-2 text-xs text-zinc-300 cursor-pointer pt-1">
+          <input type="checkbox" v-model="formIsWip" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0">
+          <span>Отметка WIP</span>
+        </label>
       </div>
 
       <div class="flex space-x-2 pt-2">
@@ -302,52 +356,61 @@ const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
 createApp({
   setup() {
-    // Хранилище состояния
     const activeTab = ref('main');
+    const timerMode = ref('planned'); // 'planned' | 'unplanned'
     const currentTime = ref(new Date());
-    const activeTimer = ref(JSON.parse(localStorage.getItem('chrono_active_timer')) || null);
+    const wipLimit = ref(parseInt(localStorage.getItem('chrono_wip_limit')) || 3);
+
+    // Базовые данные
+    const goals = ref(JSON.parse(localStorage.getItem('chrono_goals_v2')) || [
+      { id: 'g1', name: 'Запуск MVP' },
+      { id: 'g2', name: 'Личная продуктивность' }
+    ]);
+
+    const tasks = ref(JSON.parse(localStorage.getItem('chrono_tasks_v2')) || [
+      { id: 't1', goalId: 'g1', name: 'Разработка PWA', isWip: true },
+      { id: 't2', goalId: 'g1', name: 'Тестирование', isWip: false },
+      { id: 't3', goalId: 'g2', name: 'Кайдзен-анализ дня', isWip: true }
+    ]);
+
+    const entries = ref(JSON.parse(localStorage.getItem('chrono_entries_v2')) || []);
+    
+    // Выбор текущей активности
+    const selectedTaskId = ref(tasks.value[0]?.id || '');
+    const unplannedTitle = ref('');
+    const unplannedIsWip = ref(false);
+
+    // Состояние таймера
+    const activeTimer = ref(JSON.parse(localStorage.getItem('chrono_active_timer_v2')) || null);
     const activeElapsedSeconds = ref(0);
     const isPomodoroMode = ref(false);
     const pomodoroDuration = 25 * 60; // 25 минут
 
-    // Категории и Цели
-    const categories = ref(JSON.parse(localStorage.getItem('chrono_categories')) || [
-      { id: '1', name: 'Работа' },
-      { id: '2', name: 'Обучение' },
-      { id: '3', name: 'Системные' }
-    ]);
-
-    const goals = ref(JSON.parse(localStorage.getItem('chrono_goals')) || [
-      { id: '101', categoryId: '1', name: 'Кодинг', isWip: true },
-      { id: '102', categoryId: '1', name: 'Ревью задач', isWip: true },
-      { id: '103', categoryId: '2', name: 'Чтение книги', isWip: false }
-    ]);
-
-    const selectedGoalId = ref(goals.value[0]?.id || '');
-    const entries = ref(JSON.parse(localStorage.getItem('chrono_entries')) || []);
-
-    // Формы и модалки
+    // Формы
     const showModal = ref(false);
     const editingEntryId = ref(null);
-    const formGoalId = ref('');
+    const formIsUnplanned = ref(false);
+    const formTaskId = ref('');
+    const formUnplannedTitle = ref('');
     const formStartTime = ref('');
     const formEndTime = ref('');
     const formDate = ref(new Date().toISOString().split('T')[0]);
+    const formIsWip = ref(false);
 
-    const newGoalName = ref('');
-    const newGoalCatId = ref(categories.value[0]?.id || '');
-    const newCategoryName = ref('');
+    const newGoalTitle = ref('');
+    const newTaskTitle = ref('');
+    const newTaskGoalId = ref(goals.value[0]?.id || '');
 
-    // Синхронизация часов
     let timerInterval = null;
 
+    // Звук завершения Помодоро (Web Audio API)
     const playBeep = () => {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // нота Ля (880Hz)
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
         osc.connect(gain);
@@ -367,7 +430,7 @@ createApp({
         if (activeTimer.value.isPomodoro && activeElapsedSeconds.value >= pomodoroDuration) {
           playBeep();
           stopTimer();
-          alert('🍅 Помодоро-сессия завершена! Сделайте 5-минутный перерыв по Кайдзен.');
+          alert('🍅 Помодоро завершено! Сделайте Кайдзен-паузу.');
         }
       }
     };
@@ -379,19 +442,18 @@ createApp({
 
     onUnmounted(() => clearInterval(timerInterval));
 
-    // Вычисляемые свойства
-    const currentTimeStr = computed(() => {
-      return currentTime.value.toTimeString().split(' ')[0];
-    });
+    // Вычисляемые поля
+    const currentTimeStr = computed(() => currentTime.value.toTimeString().split(' ')[0]);
+    const wipTasks = computed(() => tasks.value.filter(t => t.isWip));
+    const nonWipTasks = computed(() => tasks.value.filter(t => !t.isWip));
+    const wipCount = computed(() => wipTasks.value.length + (activeTimer.value?.isUnplanned && activeTimer.value?.isWip ? 1 : 0));
 
-    const wipGoals = computed(() => goals.value.filter(g => g.isWip));
-    const nonWipGoals = computed(() => goals.value.filter(g => !g.isWip));
-    const wipCount = computed(() => wipGoals.value.length);
-
-    const getCategoryName = (catId) => {
-      const cat = categories.value.find(c => c.id === catId);
-      return cat ? cat.name : 'Без категории';
+    const getGoalName = (goalId) => {
+      const g = goals.value.find(x => x.id === goalId);
+      return g ? g.name : 'Без цели';
     };
+
+    const getTasksByGoal = (goalId) => tasks.value.filter(t => t.goalId === goalId);
 
     const formatDuration = (sec) => {
       const h = Math.floor(sec / 3600);
@@ -403,6 +465,7 @@ createApp({
     };
 
     const formatTimeHM = (isoStr) => {
+      if (!isoStr) return '';
       const d = new Date(isoStr);
       return d.toTimeString().split(' ')[0];
     };
@@ -414,23 +477,44 @@ createApp({
       return `${m}:${s}`;
     };
 
-    // Сохранение в LocalStorage
     const persist = () => {
-      localStorage.setItem('chrono_categories', JSON.stringify(categories.value));
-      localStorage.setItem('chrono_goals', JSON.stringify(goals.value));
-      localStorage.setItem('chrono_entries', JSON.stringify(entries.value));
-      localStorage.setItem('chrono_active_timer', JSON.stringify(activeTimer.value));
+      localStorage.setItem('chrono_wip_limit', wipLimit.value.toString());
+      localStorage.setItem('chrono_goals_v2', JSON.stringify(goals.value));
+      localStorage.setItem('chrono_tasks_v2', JSON.stringify(tasks.value));
+      localStorage.setItem('chrono_entries_v2', JSON.stringify(entries.value));
+      localStorage.setItem('chrono_active_timer_v2', JSON.stringify(activeTimer.value));
+    };
+
+    const setWipLimit = (limit) => {
+      wipLimit.value = limit;
+      persist();
+    };
+
+    const toggleTaskWip = (task) => {
+      if (!task.isWip && wipCount.value >= wipLimit.value) {
+        alert(`⚠️ Превышен WIP-лимит (${wipLimit.value})! Снимите флаг WIP с другой задачи, чтобы сфокусироваться.`);
+        return;
+      }
+      task.isWip = !task.isWip;
+      persist();
     };
 
     // Управление таймером
     const startTimer = (pomodoro = false) => {
-      if (!selectedGoalId.value) {
-        alert('Пожалуйста, выберите цель перед стартом.');
+      if (timerMode.value === 'planned' && !selectedTaskId.value) {
+        alert('Выберите задачу по плану перед стартом.');
         return;
       }
+      if (timerMode.value === 'unplanned' && !unplannedTitle.value.trim()) {
+        unplannedTitle.value = 'Внеплановая операция';
+      }
+
       isPomodoroMode.value = pomodoro;
       activeTimer.value = {
-        goalId: selectedGoalId.value,
+        isUnplanned: timerMode.value === 'unplanned',
+        taskId: timerMode.value === 'planned' ? selectedTaskId.value : null,
+        unplannedTitle: timerMode.value === 'unplanned' ? unplannedTitle.value.trim() : '',
+        isWip: timerMode.value === 'unplanned' ? unplannedIsWip.value : false,
         startTime: new Date().toISOString(),
         isPomodoro: pomodoro
       };
@@ -443,18 +527,37 @@ createApp({
       const start = new Date(activeTimer.value.startTime);
       const durationSec = Math.max(1, Math.floor((now.getTime() - start.getTime()) / 1000));
       
-      const goal = goals.value.find(g => g.id === activeTimer.value.goalId);
+      let title = '';
+      let goalId = '';
+      let goalName = '';
+      let taskId = '';
+      let taskName = '';
+      let isWip = activeTimer.value.isWip;
+
+      if (!activeTimer.value.isUnplanned) {
+        const task = tasks.value.find(t => t.id === activeTimer.value.taskId);
+        taskId = task ? task.id : '';
+        taskName = task ? task.name : 'Неизвестная задача';
+        goalId = task ? task.goalId : '';
+        goalName = getGoalName(goalId);
+        title = taskName;
+        isWip = task ? task.isWip : false;
+      } else {
+        title = activeTimer.value.unplannedTitle || 'Вне плана';
+      }
 
       const newEntry = {
         id: Date.now().toString(),
-        goalId: activeTimer.value.goalId,
-        goalName: goal ? goal.name : 'Неизвестная цель',
-        categoryId: goal ? goal.categoryId : '',
-        categoryName: goal ? getCategoryName(goal.categoryId) : 'Общее',
+        isUnplanned: activeTimer.value.isUnplanned,
+        goalId,
+        goalName,
+        taskId,
+        taskName,
+        title,
         startTime: activeTimer.value.startTime,
         endTime: now.toISOString(),
         durationSeconds: durationSec,
-        isWip: goal ? goal.isWip : false,
+        isWip: isWip,
         isPomodoro: activeTimer.value.isPomodoro
       };
 
@@ -466,73 +569,59 @@ createApp({
     };
 
     const toggleTimer = () => {
-      if (activeTimer.value) {
-        stopTimer();
-      } else {
-        startTimer(false);
-      }
+      if (activeTimer.value) stopTimer();
+      else startTimer(false);
     };
 
     const splitInterval = () => {
       if (!activeTimer.value) return;
-      const currentGoalId = activeTimer.value.goalId;
-      const wasPomodoro = activeTimer.value.isPomodoro;
-      
-      // Завершаем текущий
+      const current = { ...activeTimer.value };
       stopTimer();
-      // Тут же начинаем новый
-      selectedGoalId.value = currentGoalId;
-      startTimer(wasPomodoro);
-    };
-
-    const startPomodoro = () => {
-      startTimer(true);
-    };
-
-    // WIP чекбокс логика
-    const toggleWip = (goal) => {
-      if (!goal.isWip && wipCount.value >= 3) {
-        alert('⚠️ Превышен WIP-лимит! По Кайдзен нельзя брать в одновременный фокус более 3-х задач. Снимите флаг с другой цели.');
-        return;
+      // Начинаем заново
+      timerMode.value = current.isUnplanned ? 'unplanned' : 'planned';
+      if (current.isUnplanned) {
+        unplannedTitle.value = current.unplannedTitle;
+        unplannedIsWip.value = current.isWip;
+      } else {
+        selectedTaskId.value = current.taskId;
       }
-      goal.isWip = !goal.isWip;
-      persist();
+      startTimer(current.isPomodoro);
     };
 
-    // CRUD целей и категорий
+    const startPomodoro = () => startTimer(true);
+
+    // CRUD
     const addGoal = () => {
-      if (!newGoalName.value.trim()) return;
-      goals.value.push({
-        id: Date.now().toString(),
-        name: newGoalName.value.trim(),
-        categoryId: newGoalCatId.value,
-        isWip: false
-      });
-      newGoalName.value = '';
+      if (!newGoalTitle.value.trim()) return;
+      goals.value.push({ id: Date.now().toString(), name: newGoalTitle.value.trim() });
+      newGoalTitle.value = '';
       persist();
     };
 
     const deleteGoal = (id) => {
-      if (confirm('Удалить эту цель? Старые записи сохранятся.')) {
+      if (confirm('Удалить цель и связанные задачи?')) {
         goals.value = goals.value.filter(g => g.id !== id);
-        if (selectedGoalId.value === id) selectedGoalId.value = goals.value[0]?.id || '';
+        tasks.value = tasks.value.filter(t => t.goalId !== id);
         persist();
       }
     };
 
-    const addCategory = () => {
-      if (!newCategoryName.value.trim()) return;
-      categories.value.push({
+    const addTask = () => {
+      if (!newTaskTitle.value.trim()) return;
+      tasks.value.push({
         id: Date.now().toString(),
-        name: newCategoryName.value.trim()
+        goalId: newTaskGoalId.value,
+        name: newTaskTitle.value.trim(),
+        isWip: false
       });
-      newCategoryName.value = '';
+      newTaskTitle.value = '';
       persist();
     };
 
-    const deleteCategory = (id) => {
-      if (confirm('Удалить категорию?')) {
-        categories.value = categories.value.filter(c => c.id !== id);
+    const deleteTask = (id) => {
+      if (confirm('Удалить задачу?')) {
+        tasks.value = tasks.value.filter(t => t.id !== id);
+        if (selectedTaskId.value === id) selectedTaskId.value = tasks.value[0]?.id || '';
         persist();
       }
     };
@@ -544,25 +633,31 @@ createApp({
       }
     };
 
-    // Модалка ручного добавления и редактирования
+    // Модалка
     const openManualAddModal = () => {
       editingEntryId.value = null;
-      formGoalId.value = goals.value[0]?.id || '';
+      formIsUnplanned.value = false;
+      formTaskId.value = tasks.value[0]?.id || '';
+      formUnplannedTitle.value = '';
       const now = new Date();
       formEndTime.value = now.toTimeString().split(' ')[0];
       formStartTime.value = new Date(now.getTime() - 15 * 60000).toTimeString().split(' ')[0];
       formDate.value = now.toISOString().split('T')[0];
+      formIsWip.value = false;
       showModal.value = true;
     };
 
     const editEntry = (entry) => {
       editingEntryId.value = entry.id;
-      formGoalId.value = entry.goalId;
+      formIsUnplanned.value = !!entry.isUnplanned;
+      formTaskId.value = entry.taskId || tasks.value[0]?.id || '';
+      formUnplannedTitle.value = entry.isUnplanned ? entry.title : '';
       const startD = new Date(entry.startTime);
       const endD = new Date(entry.endTime);
       formStartTime.value = startD.toTimeString().split(' ')[0];
       formEndTime.value = endD.toTimeString().split(' ')[0];
       formDate.value = startD.toISOString().split('T')[0];
+      formIsWip.value = !!entry.isWip;
       showModal.value = true;
     };
 
@@ -570,37 +665,48 @@ createApp({
       const startISO = new Date(`${formDate.value}T${formStartTime.value}`).toISOString();
       const endISO = new Date(`${formDate.value}T${formEndTime.value}`).toISOString();
       const dur = Math.max(1, Math.floor((new Date(endISO) - new Date(startISO)) / 1000));
-      const goal = goals.value.find(g => g.id === formGoalId.value);
+      
+      let title = formUnplannedTitle.value.trim() || 'Вне плана';
+      let goalId = '';
+      let goalName = '';
+      let taskId = '';
+      let taskName = '';
+
+      if (!formIsUnplanned.value) {
+        const task = tasks.value.find(t => t.id === formTaskId.value);
+        taskId = task ? task.id : '';
+        taskName = task ? task.name : 'Задача';
+        goalId = task ? task.goalId : '';
+        goalName = getGoalName(goalId);
+        title = taskName;
+      }
 
       if (editingEntryId.value) {
         const idx = entries.value.findIndex(e => e.id === editingEntryId.value);
         if (idx !== -1) {
           entries.value[idx] = {
             ...entries.value[idx],
-            goalId: formGoalId.value,
-            goalName: goal ? goal.name : entries.value[idx].goalName,
-            categoryId: goal ? goal.categoryId : entries.value[idx].categoryId,
-            categoryName: goal ? getCategoryName(goal.categoryId) : entries.value[idx].categoryName,
+            isUnplanned: formIsUnplanned.value,
+            goalId, goalName, taskId, taskName, title,
             startTime: startISO,
             endTime: endISO,
-            durationSeconds: dur
+            durationSeconds: dur,
+            isWip: formIsWip.value
           };
         }
       } else {
         entries.value.unshift({
           id: Date.now().toString(),
-          goalId: formGoalId.value,
-          goalName: goal ? goal.name : 'Ручная запись',
-          categoryId: goal ? goal.categoryId : '',
-          categoryName: goal ? getCategoryName(goal.categoryId) : 'Общее',
+          isUnplanned: formIsUnplanned.value,
+          goalId, goalName, taskId, taskName, title,
           startTime: startISO,
           endTime: endISO,
           durationSeconds: dur,
-          isWip: goal ? goal.isWip : false
+          isWip: formIsWip.value,
+          isPomodoro: false
         });
       }
 
-      // Сортировка: новые сверху
       entries.value.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
       showModal.value = false;
       persist();
@@ -608,12 +714,13 @@ createApp({
 
     // Экспорт / Импорт
     const exportCSV = () => {
-      let csv = '\uFEFFДата;Начало;Конец;Длительность (сек);Длительность;Категория;Цель;WIP;Помодоро\n';
+      let csv = '\uFEFFДата;Начало;Конец;Длительность;Тип;Цель;Задача;Операция;WIP;Помодоро\n';
       entries.value.forEach(e => {
         const d = e.startTime.split('T')[0];
         const st = formatTimeHM(e.startTime);
         const et = formatTimeHM(e.endTime);
-        csv += `${d};${st};${et};${e.durationSeconds};${formatDuration(e.durationSeconds)};${e.categoryName};${e.goalName};${e.isWip ? 'Да' : 'Нет'};${e.isPomodoro ? 'Да' : 'Нет'}\n`;
+        const type = e.isUnplanned ? 'Вне плана' : 'По плану';
+        csv += `${d};${st};${et};${formatDuration(e.durationSeconds)};${type};${e.goalName || '-'};${e.taskName || '-'};${e.title};${e.isWip ? 'Да' : 'Нет'};${e.isPomodoro ? 'Да' : 'Нет'}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -624,14 +731,15 @@ createApp({
 
     const exportJSON = () => {
       const data = {
-        categories: categories.value,
+        wipLimit: wipLimit.value,
         goals: goals.value,
+        tasks: tasks.value,
         entries: entries.value
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `backup_chrono_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `backup_kaizen_${new Date().toISOString().split('T')[0]}.json`;
       link.click();
     };
 
@@ -642,14 +750,15 @@ createApp({
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.categories && data.goals && data.entries) {
-            categories.value = data.categories;
+          if (data.goals && data.tasks && data.entries) {
             goals.value = data.goals;
+            tasks.value = data.tasks;
             entries.value = data.entries;
+            if (data.wipLimit) wipLimit.value = data.wipLimit;
             persist();
-            alert('Данные успешно импортированы!');
+            alert('База данных успешно восстановлена!');
           } else {
-            alert('Неверный формат бэкапа.');
+            alert('Некорректный файл бэкапа.');
           }
         } catch (err) {
           alert('Ошибка чтения файла.');
@@ -659,22 +768,23 @@ createApp({
     };
 
     const resetAllData = () => {
-      if (confirm('Сбросить все данные? Это действие необратимо.')) {
-        if (confirm('Точно удалить всю историю и настройки?')) {
-          localStorage.clear();
-          location.reload();
-        }
+      if (confirm('Сбросить все данные и историю?') && confirm('Точно удалить всё без возможности восстановления?')) {
+        localStorage.clear();
+        location.reload();
       }
     };
 
     return {
-      activeTab, currentTimeStr, activeTimer, activeElapsedSeconds, isPomodoroMode,
-      categories, goals, selectedGoalId, entries, wipGoals, nonWipGoals, wipCount,
-      showModal, editingEntryId, formGoalId, formStartTime, formEndTime, formDate,
-      newGoalName, newGoalCatId, newCategoryName,
-      toggleTimer, splitInterval, startPomodoro, toggleWip, getCategoryName, formatDuration, formatTimeHM,
-      formatPomodoroCountdown, openManualAddModal, editEntry, deleteEntry, saveManualEntry,
-      addGoal, deleteGoal, addCategory, deleteCategory, exportCSV, exportJSON, importJSON, resetAllData
+      activeTab, timerMode, currentTimeStr, wipLimit, wipCount, wipTasks, nonWipTasks,
+      goals, tasks, entries, selectedTaskId, unplannedTitle, unplannedIsWip,
+      activeTimer, activeElapsedSeconds, isPomodoroMode,
+      showModal, editingEntryId, formIsUnplanned, formTaskId, formUnplannedTitle,
+      formStartTime, formEndTime, formDate, formIsWip,
+      newGoalTitle, newTaskTitle, newTaskGoalId,
+      getGoalName, getTasksByGoal, formatDuration, formatTimeHM, formatPomodoroCountdown,
+      setWipLimit, toggleTaskWip, toggleTimer, splitInterval, startPomodoro,
+      addGoal, deleteGoal, addTask, deleteTask, deleteEntry,
+      openManualAddModal, editEntry, saveManualEntry, exportCSV, exportJSON, importJSON, resetAllData
     };
   }
 }).mount('#app');

@@ -57,7 +57,7 @@
   </header>
 
   <!-- ==================== ОСНОВНОЙ ЭКРАН ХРОНОМЕТРАЖА ==================== -->
-  <main v-if="activeTab === 'main'" class="flex-1 flex flex-col space-y-4">
+  <main v-if="activeTab === 'main'" class="flex-1 flex flex-col space-y-3.5">
     
     <!-- 1. ТАБЛО ВРЕМЕНИ -->
     <div class="bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden">
@@ -76,17 +76,43 @@
       </div>
     </div>
 
-    <!-- 2. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ -->
+    <!-- 2. ВИДЖЕТ ДНЯ (АНАЛИТИКА ЗА СЕГОДНЯ) -->
+    <div class="bg-zinc-950 border border-zinc-800/90 rounded-2xl p-3 shadow-inner">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">📊 Сводка за сегодня</span>
+        <span class="text-[11px] font-mono-digits text-zinc-500">Всего: {{ formatDuration(todayTotalSec) }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <!-- Блок WIP времени -->
+        <div class="bg-zinc-900/80 border border-amber-500/20 rounded-xl p-2.5 flex flex-col justify-between">
+          <div class="text-[10px] font-semibold uppercase text-amber-400/90 flex items-center space-x-1">
+            <span>⭐ По целям WIP</span>
+          </div>
+          <div class="font-mono-digits text-base font-bold text-amber-300 mt-1">
+            {{ formatDuration(todayWipSec) }}
+          </div>
+        </div>
+
+        <!-- Блок времени без цели -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-2.5 flex flex-col justify-between">
+          <div class="text-[10px] font-semibold uppercase text-zinc-400 flex items-center space-x-1">
+            <span>⚪ Без цели / Рутина</span>
+          </div>
+          <div class="font-mono-digits text-base font-bold text-zinc-300 mt-1">
+            {{ formatDuration(todayNoGoalSec) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow-md">
-      
-      <!-- Поле произвольной операции -->
       <div>
         <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1">Текущая операция</label>
         <input v-model="currentOpTitle" :disabled="activeTimer !== null" placeholder="Что делаете прямо сейчас?"
                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 disabled:opacity-60">
       </div>
 
-      <!-- Привязка к Цели и Задаче (Опционально) -->
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label class="block text-[11px] text-zinc-400 uppercase mb-1">Привязать к цели</label>
@@ -111,7 +137,6 @@
         </div>
       </div>
 
-      <!-- Чекбокс WIP для операции -->
       <label class="flex items-center space-x-2 text-xs text-zinc-400 cursor-pointer pt-0.5">
         <input type="checkbox" v-model="currentOpIsWip" :disabled="activeTimer !== null" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0">
         <span>Отметить операцию как приоритетный WIP-фокус</span>
@@ -120,24 +145,21 @@
       <!-- Кнопки управления -->
       <div class="grid grid-cols-1 gap-2 pt-1">
         <div class="flex space-x-2">
-          <!-- Старт / Стоп -->
           <button @click="toggleTimer" 
                   :class="activeTimer ? 'bg-rose-600 hover:bg-rose-500' : 'bg-emerald-600 hover:bg-emerald-500'" 
-                  class="flex-1 py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide text-white transition flex items-center justify-center space-x-2 shadow-lg active:scale-95">
+                  class="flex-1 py-3 px-4 rounded-xl font-bold text-sm tracking-wide text-white transition flex items-center justify-center space-x-2 shadow-lg active:scale-95">
             <span v-if="!activeTimer">▶ СТАРТ</span>
             <span v-else>⏹ СТОП</span>
           </button>
 
-          <!-- Разбить интервал (Сплит) -->
           <button v-if="activeTimer" @click="splitInterval" 
-                  class="bg-amber-600 hover:bg-amber-500 active:scale-95 py-3.5 px-4 rounded-xl font-bold text-sm text-white transition flex items-center justify-center space-x-1"
-                  title="Записать текущий интервал и сразу продолжить">
+                  class="bg-amber-600 hover:bg-amber-500 active:scale-95 py-3 px-4 rounded-xl font-bold text-sm text-white transition flex items-center justify-center space-x-1"
+                  title="Записать интервал и сразу продолжить">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             <span>Сплит</span>
           </button>
         </div>
 
-        <!-- Помодоро -->
         <button v-if="!activeTimer" @click="startPomodoro" 
                 class="w-full bg-zinc-800 hover:bg-zinc-700 active:scale-95 py-2 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/20 transition flex items-center justify-center space-x-2">
           <span>🍅 Запустить Помодоро (25 мин)</span>
@@ -145,14 +167,14 @@
       </div>
     </div>
 
-    <!-- 3. ЖУРНАЛ ОПЕРАЦИЙ -->
+    <!-- 4. ЖУРНАЛ ОПЕРАЦИЙ -->
     <div class="flex-1 flex flex-col min-h-0 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-4">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400">История операций ({{ entries.length }})</h2>
         <span class="text-[11px] text-zinc-500">Сортировка: новые сверху</span>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-72">
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-60">
         <div v-if="entries.length === 0" class="text-center py-8 text-zinc-600 text-sm">
           Журнал пуст. Введите операцию и нажмите «Старт».
         </div>
@@ -218,11 +240,17 @@
       </div>
     </div>
 
-    <!-- 2. Создание новой Цели -->
+    <!-- 2. Создание новой Цели + Кайдзен-подсказка об измеримости -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
       <h3 class="text-xs font-bold uppercase text-zinc-400">+ Создать новую цель</h3>
+      
+      <!-- Подсказка SMART / Kaizen -->
+      <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-[11px] text-amber-300/90 leading-relaxed">
+        💡 <strong>Кайдзен-совет:</strong> Формулируйте цель <u>измеримо</u>. Вместо абстрактного <em>«Учить английский»</em> пишите: <em>«Пройти 30 уроков»</em> или <em>«Выучить 500 слов»</em>.
+      </div>
+
       <form @submit.prevent="addGoal" class="space-y-2">
-        <input v-model="newGoalName" placeholder="Название цели..." 
+        <input v-model="newGoalName" placeholder="Название цели (измеримое)..." 
                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
         <div class="flex space-x-2">
           <input type="date" v-model="newGoalDeadline" title="Дедлайн цели (опционально)"
@@ -232,11 +260,11 @@
       </form>
     </div>
 
-    <!-- 3. Дерево: Цели -> Задачи (Кнопка добавления задачи ВНИЗУ) -->
+    <!-- 3. Дерево: Цели -> Задачи (с кнопками редактирования ✏️) -->
     <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
       <div v-for="goal in goals" :key="goal.id" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow">
         
-        <!-- Заголовок цели -->
+        <!-- Заголовок цели с кнопкой редактирования -->
         <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
           <div class="min-w-0 flex-1 mr-2">
             <span class="text-xs font-bold text-amber-400 truncate block">🎯 {{ goal.name || 'Цель без названия' }}</span>
@@ -244,25 +272,36 @@
               <span>📅 Дедлайн: {{ formatDateShort(goal.deadline) }}</span>
             </span>
           </div>
-          <button @click="deleteGoal(goal.id)" class="text-zinc-600 hover:text-rose-400 text-xs px-1">✕</button>
+          <div class="flex items-center space-x-1">
+            <button @click="openEditGoalModal(goal)" class="p-1 text-zinc-500 hover:text-zinc-300" title="Редактировать цель">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+            <button @click="deleteGoal(goal.id)" class="p-1 text-zinc-600 hover:text-rose-400" title="Удалить цель">✕</button>
+          </div>
         </div>
 
-        <!-- Список задач внутри цели -->
+        <!-- Список задач внутри цели с кнопкой редактирования -->
         <div class="space-y-1.5 pl-1">
           <div v-for="task in getTasksByGoal(goal.id)" :key="task.id" class="flex items-center justify-between bg-zinc-950 p-2 rounded-xl border border-zinc-800 text-xs">
             <div class="min-w-0 flex-1 flex items-center space-x-2 mr-2">
-              <label class="flex items-center space-x-1.5 cursor-pointer">
+              <label class="flex items-center space-x-1.5 cursor-pointer min-w-0">
                 <input type="checkbox" :checked="task.isWip" @change="toggleTaskWip(task)" class="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0">
                 <span :class="task.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-300'" class="truncate">{{ task.name || 'Задача без названия' }}</span>
               </label>
               <span v-if="task.deadline" class="text-[10px] text-zinc-500 shrink-0">📅 {{ formatDateShort(task.deadline) }}</span>
             </div>
-            <button @click="deleteTask(task.id)" class="text-zinc-600 hover:text-rose-400 text-xs px-1">✕</button>
+            
+            <div class="flex items-center space-x-1">
+              <button @click="openEditTaskModal(task)" class="p-1 text-zinc-500 hover:text-zinc-300" title="Редактировать задачу">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              </button>
+              <button @click="deleteTask(task.id)" class="p-1 text-zinc-600 hover:text-rose-400 text-xs">✕</button>
+            </div>
           </div>
           <div v-if="getTasksByGoal(goal.id).length === 0" class="text-[11px] text-zinc-600 italic py-0.5">Нет задач в этой цели</div>
         </div>
 
-        <!-- БЛОК ДОБАВЛЕНИЯ ЗАДАЧИ ВНИЗУ КАРТОЧКИ ЦЕЛИ -->
+        <!-- Кнопка добавления задачи ВНИЗУ карточки цели -->
         <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
           <input v-model="newTaskNames[goal.id]" placeholder="Название новой задачи..."
                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
@@ -293,7 +332,55 @@
     </div>
   </main>
 
-  <!-- ==================== МОДАЛКА РЕДАКТИРОВАНИЯ / РУЧНОГО ВВОДА ==================== -->
+  <!-- ==================== МОДАЛКА: РЕДАКТИРОВАНИЕ ЦЕЛИ ==================== -->
+  <div v-if="showEditGoalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-white">Редактировать цель</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Название цели</label>
+          <input v-model="editGoalForm.name" placeholder="Измеримая цель..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+        </div>
+        <div>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дедлайн</label>
+          <input type="date" v-model="editGoalForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button @click="saveGoalEdit" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs">Сохранить</button>
+        <button @click="showEditGoalModal = false" class="bg-zinc-800 text-zinc-400 hover:text-white py-2 px-3 rounded-xl text-xs">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛКА: РЕДАКТИРОВАНИЕ ЗАДАЧИ ==================== -->
+  <div v-if="showEditTaskModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-white">Редактировать задачу</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Название задачи</label>
+          <input v-model="editTaskForm.name" placeholder="Название задачи..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+        </div>
+        <div>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Привязка к цели</label>
+          <select v-model="editTaskForm.goalId" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+            <option v-for="g in goals" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дедлайн</label>
+          <input type="date" v-model="editTaskForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button @click="saveTaskEdit" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs">Сохранить</button>
+        <button @click="showEditTaskModal = false" class="bg-zinc-800 text-zinc-400 hover:text-white py-2 px-3 rounded-xl text-xs">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛКА: РЕДАКТИРОВАНИЕ ОПЕРАЦИИ / РУЧНОЙ ВВОД ==================== -->
   <div v-if="showModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
       <h3 class="text-sm font-bold uppercase tracking-wider text-white">
@@ -377,7 +464,7 @@ createApp({
     const currentTime = ref(new Date());
     const wipLimit = ref(parseInt(localStorage.getItem('chrono_wip_limit_v3')) || 3);
 
-    // Базовые данные (чистые по умолчанию, без навязчивого текста)
+    // Базовые данные
     const goals = ref(JSON.parse(localStorage.getItem('chrono_goals_v3')) || []);
     const tasks = ref(JSON.parse(localStorage.getItem('chrono_tasks_v3')) || []);
     const entries = ref(JSON.parse(localStorage.getItem('chrono_entries_v3')) || []);
@@ -394,13 +481,21 @@ createApp({
     const isPomodoroMode = ref(false);
     const pomodoroDuration = 25 * 60; // 25 минут
 
-    // Поля создания новых целей и задач в настройках
+    // Поля создания
     const newGoalName = ref('');
     const newGoalDeadline = ref('');
     const newTaskNames = reactive({});
     const newTaskDeadlines = reactive({});
 
-    // Форма модалки
+    // Редактирование цели
+    const showEditGoalModal = ref(false);
+    const editGoalForm = reactive({ id: '', name: '', deadline: '' });
+
+    // Редактирование задачи
+    const showEditTaskModal = ref(false);
+    const editTaskForm = reactive({ id: '', goalId: '', name: '', deadline: '' });
+
+    // Редактирование операции
     const showModal = ref(false);
     const editingEntryId = ref(null);
     const formOpTitle = ref('');
@@ -452,10 +547,33 @@ createApp({
 
     onUnmounted(() => clearInterval(timerInterval));
 
-    // Вычисляемые списки
+    // Вычисляемые списки и аналитика за день
     const currentTimeStr = computed(() => currentTime.value.toTimeString().split(' ')[0]);
     const wipTasks = computed(() => tasks.value.filter(t => t.isWip));
     const wipCount = computed(() => wipTasks.value.length + (activeTimer.value?.isWip ? 1 : 0));
+
+    // Аналитика дня
+    const todayEntries = computed(() => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      return entries.value.filter(e => e.startTime && e.startTime.startsWith(todayStr));
+    });
+
+    const todayWipSec = computed(() => {
+      return todayEntries.value
+        .filter(e => e.isWip)
+        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
+    });
+
+    const todayNoGoalSec = computed(() => {
+      return todayEntries.value
+        .filter(e => !e.goalId)
+        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
+    });
+
+    const todayTotalSec = computed(() => {
+      return todayEntries.value
+        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
+    });
 
     const availableTasks = computed(() => {
       if (!currentGoalId.value) return tasks.value;
@@ -485,7 +603,7 @@ createApp({
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
       const s = sec % 60;
-      if (h > 0) return `${h}ч ${m}м ${s}с`;
+      if (h > 0) return `${h}ч ${m}м`;
       if (m > 0) return `${m}м ${s}с`;
       return `${s}с`;
     };
@@ -534,7 +652,7 @@ createApp({
       persist();
     };
 
-    // Управление таймером
+    // Таймер
     const startTimer = (pomodoro = false) => {
       isPomodoroMode.value = pomodoro;
       activeTimer.value = {
@@ -587,7 +705,6 @@ createApp({
       if (!activeTimer.value) return;
       const current = { ...activeTimer.value };
       stopTimer();
-      // Восстанавливаем параметры и стартуем бесшовно
       currentOpTitle.value = current.title;
       currentGoalId.value = current.goalId;
       currentTaskId.value = current.taskId;
@@ -597,7 +714,7 @@ createApp({
 
     const startPomodoro = () => startTimer(true);
 
-    // CRUD целей и задач
+    // CRUD целей
     const addGoal = () => {
       goals.value.push({
         id: Date.now().toString(),
@@ -609,6 +726,27 @@ createApp({
       persist();
     };
 
+    const openEditGoalModal = (goal) => {
+      editGoalForm.id = goal.id;
+      editGoalForm.name = goal.name;
+      editGoalForm.deadline = goal.deadline || '';
+      showEditGoalModal.value = true;
+    };
+
+    const saveGoalEdit = () => {
+      const g = goals.value.find(x => x.id === editGoalForm.id);
+      if (g) {
+        g.name = editGoalForm.name.trim() || 'Цель без названия';
+        g.deadline = editGoalForm.deadline || '';
+        // обновляем снимки в истории
+        entries.value.forEach(e => {
+          if (e.goalId === g.id) e.goalName = g.name;
+        });
+        persist();
+      }
+      showEditGoalModal.value = false;
+    };
+
     const deleteGoal = (id) => {
       if (confirm('Удалить эту цель и связанные задачи?')) {
         goals.value = goals.value.filter(g => g.id !== id);
@@ -618,6 +756,7 @@ createApp({
       }
     };
 
+    // CRUD задач
     const addTaskToGoal = (goalId) => {
       const name = (newTaskNames[goalId] || '').trim();
       const deadline = newTaskDeadlines[goalId] || '';
@@ -631,6 +770,33 @@ createApp({
       newTaskNames[goalId] = '';
       newTaskDeadlines[goalId] = '';
       persist();
+    };
+
+    const openEditTaskModal = (task) => {
+      editTaskForm.id = task.id;
+      editTaskForm.goalId = task.goalId;
+      editTaskForm.name = task.name;
+      editTaskForm.deadline = task.deadline || '';
+      showEditTaskModal.value = true;
+    };
+
+    const saveTaskEdit = () => {
+      const t = tasks.value.find(x => x.id === editTaskForm.id);
+      if (t) {
+        t.name = editTaskForm.name.trim() || 'Задача без названия';
+        t.goalId = editTaskForm.goalId;
+        t.deadline = editTaskForm.deadline || '';
+        // обновляем снимки в истории
+        entries.value.forEach(e => {
+          if (e.taskId === t.id) {
+            e.taskName = t.name;
+            e.goalId = t.goalId;
+            e.goalName = getGoalName(t.goalId);
+          }
+        });
+        persist();
+      }
+      showEditTaskModal.value = false;
     };
 
     const deleteTask = (id) => {
@@ -648,7 +814,7 @@ createApp({
       }
     };
 
-    // Модальное окно
+    // Модальное окно операций
     const openManualAddModal = () => {
       editingEntryId.value = null;
       formOpTitle.value = '';
@@ -786,7 +952,10 @@ createApp({
       activeTab, currentTimeStr, wipLimit, wipCount, wipTasks,
       goals, tasks, entries, currentOpTitle, currentGoalId, currentTaskId, currentOpIsWip,
       availableTasks, activeTimer, activeElapsedSeconds, isPomodoroMode,
+      todayWipSec, todayNoGoalSec, todayTotalSec,
       newGoalName, newGoalDeadline, newTaskNames, newTaskDeadlines,
+      showEditGoalModal, editGoalForm, openEditGoalModal, saveGoalEdit,
+      showEditTaskModal, editTaskForm, openEditTaskModal, saveTaskEdit,
       showModal, editingEntryId, formOpTitle, formGoalId, formTaskId, formStartTime, formEndTime, formDate, formIsWip,
       getGoalName, getTaskName, getTasksByGoal, formatDateShort, formatDuration, formatTimeHM, formatPomodoroCountdown,
       onGoalChange, setWipLimit, toggleTaskWip, toggleTimer, splitInterval, startPomodoro,

@@ -39,7 +39,7 @@
   <!-- ==================== ШАПКА / СТАТУС WIP ==================== -->
   <header class="flex justify-between items-center mb-2 pt-1 border-b border-zinc-800 pb-3">
     <div class="flex items-center space-x-2">
-      <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Фокус WIP:</span>
+      <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">На сегодня (WIP):</span>
       <span :class="wipCount >= wipLimit ? 'bg-amber-500/20 text-amber-400 border-amber-500/50 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'" 
             class="px-2 py-0.5 text-xs font-mono-digits font-bold rounded border transition-colors">
         {{ wipCount }} / {{ wipLimit }}
@@ -76,34 +76,7 @@
       </div>
     </div>
 
-    <!-- 2. ВИДЖЕТ ДНЯ (АНАЛИТИКА ЗА СЕГОДНЯ) -->
-    <div class="bg-zinc-950 border border-zinc-800/90 rounded-2xl p-3 shadow-inner">
-      <div class="flex justify-between items-center mb-2 px-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">📊 Сводка за сегодня</span>
-        <span class="text-[11px] font-mono-digits text-zinc-500">Всего: {{ formatDuration(todayTotalSec) }}</span>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="bg-zinc-900/80 border border-amber-500/20 rounded-xl p-2.5 flex flex-col justify-between">
-          <div class="text-[10px] font-semibold uppercase text-amber-400/90 flex items-center space-x-1">
-            <span>⭐ По целям WIP</span>
-          </div>
-          <div class="font-mono-digits text-base font-bold text-amber-300 mt-1">
-            {{ formatDuration(todayWipSec) }}
-          </div>
-        </div>
-
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-2.5 flex flex-col justify-between">
-          <div class="text-[10px] font-semibold uppercase text-zinc-400 flex items-center space-x-1">
-            <span>⚪ Без цели / Рутина</span>
-          </div>
-          <div class="font-mono-digits text-base font-bold text-zinc-300 mt-1">
-            {{ formatDuration(todayNoGoalSec) }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ -->
+    <!-- 2. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow-md">
       <div>
         <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1">Текущая операция</label>
@@ -137,7 +110,7 @@
 
       <!-- Автоматический индикатор WIP задачи -->
       <div v-if="isCurrentTaskWip" class="flex items-center space-x-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-xl font-medium">
-        <span>⭐ Выбрана задача из фокуса WIP (статус присвоится автоматически)</span>
+        <span>⭐ Задача в фокусе на сегодня (WIP)</span>
       </div>
 
       <!-- Кнопки управления -->
@@ -165,14 +138,14 @@
       </div>
     </div>
 
-    <!-- 4. ЖУРНАЛ ОПЕРАЦИЙ -->
+    <!-- 3. ЖУРНАЛ ОПЕРАЦИЙ -->
     <div class="flex-1 flex flex-col min-h-0 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-4">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400">История операций ({{ entries.length }})</h2>
         <span class="text-[11px] text-zinc-500">Сортировка: новые сверху</span>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-60">
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-72">
         <div v-if="entries.length === 0" class="text-center py-8 text-zinc-600 text-sm">
           Журнал пуст. Введите операцию и нажмите «Старт».
         </div>
@@ -226,8 +199,8 @@
     <!-- 1. Настройка WIP Лимита -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2">
       <div class="flex justify-between items-center">
-        <h3 class="text-xs font-bold uppercase text-zinc-400">Лимит WIP-фокуса (1 - 5)</h3>
-        <span class="text-xs font-mono-digits font-bold text-amber-400">{{ wipLimit }} задач в работе</span>
+        <h3 class="text-xs font-bold uppercase text-zinc-400">Лимит задач на день (WIP)</h3>
+        <span class="text-xs font-mono-digits font-bold text-amber-400">{{ wipLimit }} задач</span>
       </div>
       <div class="flex justify-between space-x-2 pt-1">
         <button v-for="n in [1,2,3,4,5]" :key="n" @click="setWipLimit(n)"
@@ -238,7 +211,7 @@
       </div>
     </div>
 
-    <!-- 2. Создание новой Цели + Подсказка -->
+    <!-- 2. Создание новой Цели -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
       <h3 class="text-xs font-bold uppercase text-zinc-400">+ Создать новую цель</h3>
       
@@ -250,18 +223,18 @@
         <input v-model="newGoalName" placeholder="Название цели (измеримое)..." 
                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
         
-        <div class="space-y-1">
-          <label class="block text-[11px] text-zinc-400">📅 Введите срок завершения (опционально):</label>
-          <div class="flex space-x-2">
-            <input type="date" v-model="newGoalDeadline" title="Введите срок завершения"
-                   class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-300">
-            <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-xl text-xs font-bold text-white">Добавить цель</button>
+        <div class="flex space-x-2">
+          <div class="relative flex-1">
+            <span class="absolute left-2.5 top-2 text-xs">📅</span>
+            <input type="date" v-model="newGoalDeadline" title="Срок завершения"
+                   class="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-2 py-2 text-xs text-zinc-300">
           </div>
+          <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-xl text-xs font-bold text-white">Добавить цель</button>
         </div>
       </form>
     </div>
 
-    <!-- 3. Дерево: Цели -> Задачи -->
+    <!-- 3. Дерево: Цели -> Задачи (с чекбоксом "Сегодня WIP") -->
     <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
       <div v-for="goal in goals" :key="goal.id" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow">
         
@@ -270,7 +243,7 @@
           <div class="min-w-0 flex-1 mr-2">
             <span class="text-xs font-bold text-amber-400 truncate block">🎯 {{ goal.name || 'Цель без названия' }}</span>
             <span v-if="goal.deadline" class="text-[10px] text-zinc-500 flex items-center space-x-1 mt-0.5">
-              <span>📅 Срок: {{ formatDateShort(goal.deadline) }}</span>
+              <span>📅 {{ formatDateShort(goal.deadline) }}</span>
             </span>
           </div>
           <div class="flex items-center space-x-1">
@@ -281,13 +254,18 @@
           </div>
         </div>
 
-        <!-- Список задач -->
+        <!-- Список задач внутри цели с чекбоксом НА СЕГОДНЯ (WIP) -->
         <div class="space-y-1.5 pl-1">
-          <div v-for="task in getTasksByGoal(goal.id)" :key="task.id" class="flex items-center justify-between bg-zinc-950 p-2 rounded-xl border border-zinc-800 text-xs">
+          <div v-for="task in getTasksByGoal(goal.id)" :key="task.id" 
+               :class="task.isWip ? 'border-amber-500/40 bg-zinc-950/90' : 'border-zinc-800 bg-zinc-950'"
+               class="flex items-center justify-between p-2 rounded-xl border text-xs transition">
             <div class="min-w-0 flex-1 flex items-center space-x-2 mr-2">
-              <label class="flex items-center space-x-1.5 cursor-pointer min-w-0" title="Отметить как WIP-фокус">
+              <label class="flex items-center space-x-1.5 cursor-pointer min-w-0" title="Отметить задачу на сегодня (WIP-лимит)">
                 <input type="checkbox" :checked="task.isWip" @change="toggleTaskWip(task)" class="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0">
-                <span :class="task.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-300'" class="truncate">{{ task.name || 'Задача без названия' }}</span>
+                <span :class="task.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-300'" class="truncate">
+                  {{ task.name || 'Задача без названия' }}
+                </span>
+                <span v-if="task.isWip" class="text-[9px] bg-amber-500/20 text-amber-400 px-1 py-0.5 rounded font-bold shrink-0">Сегодня</span>
               </label>
               <span v-if="task.deadline" class="text-[10px] text-zinc-500 shrink-0">📅 {{ formatDateShort(task.deadline) }}</span>
             </div>
@@ -307,15 +285,15 @@
           <input v-model="newTaskNames[goal.id]" placeholder="Название новой задачи..."
                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
           
-          <div>
-            <label class="block text-[10px] text-zinc-400 mb-0.5">📅 Введите срок завершения:</label>
-            <div class="flex space-x-2">
-              <input type="date" v-model="newTaskDeadlines[goal.id]" title="Введите срок завершения"
-                     class="flex-1 bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-zinc-300">
-              <button @click="addTaskToGoal(goal.id)" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white whitespace-nowrap">
-                + Задача
-              </button>
+          <div class="flex space-x-2">
+            <div class="relative flex-1">
+              <span class="absolute left-2 top-1.5 text-xs">📅</span>
+              <input type="date" v-model="newTaskDeadlines[goal.id]" title="Срок завершения"
+                     class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl pl-7 pr-2 py-1.5 text-xs text-zinc-300">
             </div>
+            <button @click="addTaskToGoal(goal.id)" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white whitespace-nowrap">
+              + Задача
+            </button>
           </div>
         </div>
 
@@ -347,8 +325,8 @@
           <input v-model="editGoalForm.name" placeholder="Измеримая цель..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">📅 Введите срок завершения</label>
-          <input type="date" v-model="editGoalForm.deadline" title="Введите срок завершения" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Срок 📅</label>
+          <input type="date" v-model="editGoalForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
       </div>
       <div class="flex space-x-2 pt-2">
@@ -374,8 +352,8 @@
           </select>
         </div>
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">📅 Введите срок завершения</label>
-          <input type="date" v-model="editTaskForm.deadline" title="Введите срок завершения" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Срок 📅</label>
+          <input type="date" v-model="editTaskForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
       </div>
       <div class="flex space-x-2 pt-2">
@@ -427,7 +405,7 @@
         </div>
 
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дата</label>
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дата 📅</label>
           <input type="date" v-model="formDate" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-1.5 text-xs text-white">
         </div>
       </div>
@@ -545,39 +523,15 @@ createApp({
 
     onUnmounted(() => clearInterval(timerInterval));
 
-    // Вычисляемые списки и аналитика за день
+    // Вычисляемые свойства
     const currentTimeStr = computed(() => currentTime.value.toTimeString().split(' ')[0]);
     const wipTasks = computed(() => tasks.value.filter(t => t.isWip));
     const wipCount = computed(() => wipTasks.value.length);
 
-    // Автоматическая проверка: является ли выбранная задача WIP
     const isCurrentTaskWip = computed(() => {
       if (!currentTaskId.value) return false;
       const t = tasks.value.find(x => x.id === currentTaskId.value);
       return t ? !!t.isWip : false;
-    });
-
-    // Аналитика дня
-    const todayEntries = computed(() => {
-      const todayStr = new Date().toISOString().split('T')[0];
-      return entries.value.filter(e => e.startTime && e.startTime.startsWith(todayStr));
-    });
-
-    const todayWipSec = computed(() => {
-      return todayEntries.value
-        .filter(e => e.isWip)
-        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
-    });
-
-    const todayNoGoalSec = computed(() => {
-      return todayEntries.value
-        .filter(e => !e.goalId)
-        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
-    });
-
-    const todayTotalSec = computed(() => {
-      return todayEntries.value
-        .reduce((acc, e) => acc + (e.durationSeconds || 0), 0);
     });
 
     const availableTasks = computed(() => {
@@ -650,7 +604,7 @@ createApp({
 
     const toggleTaskWip = (task) => {
       if (!task.isWip && wipCount.value >= wipLimit.value) {
-        alert(`⚠️ Превышен WIP-лимит (${wipLimit.value})! Снимите флаг WIP с другой задачи.`);
+        alert(`⚠️ Превышен лимит задач на сегодня (${wipLimit.value})! Снимите отметку с другой задачи.`);
         return;
       }
       task.isWip = !task.isWip;
@@ -958,7 +912,6 @@ createApp({
       activeTab, currentTimeStr, wipLimit, wipCount, wipTasks, isCurrentTaskWip,
       goals, tasks, entries, currentOpTitle, currentGoalId, currentTaskId,
       availableTasks, activeTimer, activeElapsedSeconds, isPomodoroMode,
-      todayWipSec, todayNoGoalSec, todayTotalSec,
       newGoalName, newGoalDeadline, newTaskNames, newTaskDeadlines,
       showEditGoalModal, editGoalForm, openEditGoalModal, saveGoalEdit,
       showEditTaskModal, editTaskForm, openEditTaskModal, saveTaskEdit,

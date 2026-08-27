@@ -36,7 +36,7 @@
 
 <div id="app" class="w-full max-w-md min-h-screen flex flex-col justify-between p-4 pb-8 select-none">
 
-  <!-- ==================== ШАПКА / СТАТУС WIP ==================== -->
+  <!-- ==================== ШАПКА / СТАТУС WIP / КНОПКИ ==================== -->
   <header class="flex justify-between items-center mb-2 pt-1 border-b border-zinc-800 pb-3">
     <div class="flex items-center space-x-2">
       <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">На сегодня (WIP):</span>
@@ -47,10 +47,20 @@
     </div>
     
     <div class="flex space-x-1">
-      <button @click="openManualAddModal" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Добавить запись вручную">
+      <!-- Добавить запись вручную -->
+      <button @click="openManualAddModal" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Добавить вручную">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       </button>
-      <button @click="activeTab = activeTab === 'main' ? 'settings' : 'main'" class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition" title="Настройки и структура">
+      
+      <!-- Экспорт / Импорт / Данные -->
+      <button @click="showDataModal = true" class="p-2 text-zinc-400 hover:text-amber-400 rounded-lg hover:bg-zinc-800 transition" title="Данные и бэкап">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+      </button>
+
+      <!-- Настройки -->
+      <button @click="activeTab = activeTab === 'main' ? 'settings' : 'main'" 
+              :class="activeTab === 'settings' ? 'text-amber-400 bg-zinc-800' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'"
+              class="p-2 rounded-lg transition" title="Настройки и структура">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
       </button>
     </div>
@@ -63,7 +73,7 @@
     <div class="bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden">
       <div v-if="activeTimer && isPomodoroMode" class="text-xs uppercase font-bold tracking-widest text-rose-400 mb-1 flex items-center justify-center space-x-1">
         <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-        <span>Режим Помодоро</span>
+        <span class="truncate max-w-[280px]">🍅 {{ activeTimer.title }}</span>
       </div>
       <div v-else-if="activeTimer" class="text-xs uppercase font-bold tracking-widest text-emerald-400 mb-1 flex items-center justify-center space-x-1">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -131,9 +141,11 @@
           </button>
         </div>
 
+        <!-- Кнопка Помодоро с отображением операции -->
         <button v-if="!activeTimer" @click="startPomodoro" 
-                class="w-full bg-zinc-800 hover:bg-zinc-700 active:scale-95 py-2 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/20 transition flex items-center justify-center space-x-2">
+                class="w-full bg-zinc-800 hover:bg-zinc-700 active:scale-95 py-2.5 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/20 transition flex items-center justify-center space-x-2 truncate px-3">
           <span>🍅 Запустить Помодоро (25 мин)</span>
+          <span v-if="currentOpTitle" class="text-zinc-400 font-normal truncate max-w-[150px]">• {{ currentOpTitle }}</span>
         </button>
       </div>
     </div>
@@ -145,7 +157,7 @@
         <span class="text-[11px] text-zinc-500">Сортировка: новые сверху</span>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-72">
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-80">
         <div v-if="entries.length === 0" class="text-center py-8 text-zinc-600 text-sm">
           Журнал пуст. Введите операцию и нажмите «Старт».
         </div>
@@ -187,10 +199,10 @@
     </div>
   </main>
 
-  <!-- ==================== ЭКРАН НАСТРОЕК: ЦЕЛИ, ЗАДАЧИ, ДЕДЛАЙНЫ ==================== -->
+  <!-- ==================== ЭКРАН НАСТРОЕК: ЦЕЛИ И ЗАДАЧИ ==================== -->
   <main v-if="activeTab === 'settings'" class="flex-1 flex flex-col space-y-4">
     <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-white">Цели, Задачи и Дедлайны</h2>
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white">Цели и Задачи</h2>
       <button @click="activeTab = 'main'" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded-lg">
         ← К таймеру
       </button>
@@ -223,19 +235,22 @@
         <input v-model="newGoalName" placeholder="Название цели (измеримое)..." 
                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
         
-        <div class="flex space-x-2">
-          <div class="relative flex-1">
-            <span class="absolute left-2.5 top-2 text-xs">📅</span>
+        <div class="flex items-center space-x-2">
+          <!-- Компактное поле даты -->
+          <div class="relative w-36 shrink-0">
+            <span class="absolute left-2.5 top-2 text-xs pointer-events-none">📅</span>
             <input type="date" v-model="newGoalDeadline" title="Срок завершения"
-                   class="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-2 py-2 text-xs text-zinc-300">
+                   class="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-1 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500">
           </div>
-          <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-xl text-xs font-bold text-white">Добавить цель</button>
+          <button type="submit" class="flex-1 shrink-0 bg-zinc-700 hover:bg-zinc-600 py-2 rounded-xl text-xs font-bold text-white transition">
+            Добавить цель
+          </button>
         </div>
       </form>
     </div>
 
-    <!-- 3. Дерево: Цели -> Задачи (с чекбоксом "Сегодня WIP") -->
-    <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+    <!-- 3. Дерево: Цели -> Задачи -->
+    <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
       <div v-for="goal in goals" :key="goal.id" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow">
         
         <!-- Заголовок цели -->
@@ -254,7 +269,7 @@
           </div>
         </div>
 
-        <!-- Список задач внутри цели с чекбоксом НА СЕГОДНЯ (WIP) -->
+        <!-- Список задач -->
         <div class="space-y-1.5 pl-1">
           <div v-for="task in getTasksByGoal(goal.id)" :key="task.id" 
                :class="task.isWip ? 'border-amber-500/40 bg-zinc-950/90' : 'border-zinc-800 bg-zinc-950'"
@@ -280,18 +295,18 @@
           <div v-if="getTasksByGoal(goal.id).length === 0" class="text-[11px] text-zinc-600 italic py-0.5">Нет задач в этой цели</div>
         </div>
 
-        <!-- Добавление задачи ВНИЗУ карточки цели -->
+        <!-- Добавление задачи ВНИЗУ карточки цели (без наложения кнопки) -->
         <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
           <input v-model="newTaskNames[goal.id]" placeholder="Название новой задачи..."
                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
           
-          <div class="flex space-x-2">
-            <div class="relative flex-1">
-              <span class="absolute left-2 top-1.5 text-xs">📅</span>
+          <div class="flex items-center space-x-2">
+            <div class="relative w-32 shrink-0">
+              <span class="absolute left-2 top-1.5 text-xs pointer-events-none">📅</span>
               <input type="date" v-model="newTaskDeadlines[goal.id]" title="Срок завершения"
-                     class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl pl-7 pr-2 py-1.5 text-xs text-zinc-300">
+                     class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl pl-7 pr-1 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500">
             </div>
-            <button @click="addTaskToGoal(goal.id)" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white whitespace-nowrap">
+            <button @click="addTaskToGoal(goal.id)" class="flex-1 shrink-0 bg-amber-600 hover:bg-amber-500 py-1.5 rounded-xl text-xs font-bold text-white transition">
               + Задача
             </button>
           </div>
@@ -299,21 +314,37 @@
 
       </div>
     </div>
-
-    <!-- 4. Экспорт / Импорт / Сброс -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
-      <h3 class="text-xs font-bold uppercase text-zinc-400">Данные</h3>
-      <div class="grid grid-cols-2 gap-2">
-        <button @click="exportCSV" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2 rounded-xl border border-zinc-700">📊 Скачать CSV</button>
-        <button @click="exportJSON" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2 rounded-xl border border-zinc-700">💾 Бэкап JSON</button>
-      </div>
-      <label class="block text-center bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs py-2 rounded-xl border border-dashed border-zinc-700 cursor-pointer">
-        <span>📥 Загрузить JSON</span>
-        <input type="file" @change="importJSON" accept=".json" class="hidden">
-      </label>
-      <button @click="resetAllData" class="w-full text-rose-500 hover:text-rose-400 text-[11px] py-1">Очистить всю базу</button>
-    </div>
   </main>
+
+  <!-- ==================== МОДАЛКА: ДАННЫЕ И БЭКАП (ВЫЗЫВАЕТСЯ ИЗ ШАПКИ) ==================== -->
+  <div v-if="showDataModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-white">Управление данными</h3>
+        <button @click="showDataModal = false" class="text-zinc-500 hover:text-white text-xs p-1">✕</button>
+      </div>
+      
+      <div class="space-y-2.5">
+        <div class="grid grid-cols-2 gap-2">
+          <button @click="exportCSV" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2.5 rounded-xl border border-zinc-700 font-medium">📊 Скачать CSV</button>
+          <button @click="exportJSON" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-2.5 rounded-xl border border-zinc-700 font-medium">💾 Бэкап JSON</button>
+        </div>
+        
+        <label class="block text-center bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 text-xs py-2.5 rounded-xl border border-dashed border-zinc-700 cursor-pointer transition">
+          <span>📥 Восстановить из JSON</span>
+          <input type="file" @change="importJSON" accept=".json" class="hidden">
+        </label>
+        
+        <button @click="resetAllData" class="w-full text-rose-500 hover:text-rose-400 text-xs py-2 border border-rose-500/20 rounded-xl transition">
+          🗑 Сбросить всю базу данных
+        </button>
+      </div>
+
+      <button @click="showDataModal = false" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl text-xs font-semibold">
+        Закрыть
+      </button>
+    </div>
+  </div>
 
   <!-- ==================== МОДАЛКА: РЕДАКТИРОВАНИЕ ЦЕЛИ ==================== -->
   <div v-if="showEditGoalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -439,6 +470,7 @@ const { createApp, ref, computed, onMounted, onUnmounted, reactive } = Vue;
 createApp({
   setup() {
     const activeTab = ref('main');
+    const showDataModal = ref(false);
     const currentTime = ref(new Date());
     const wipLimit = ref(parseInt(localStorage.getItem('chrono_wip_limit_v3')) || 3);
 
@@ -484,7 +516,7 @@ createApp({
 
     let timerInterval = null;
 
-    // Звуковой зуммер Помодоро (Web Audio API)
+    // Звуковой сигнал Помодоро (Web Audio API)
     const playBeep = () => {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -774,7 +806,7 @@ createApp({
       }
     };
 
-    // Модальное окно операций
+    // Модалка ручного ввода
     const openManualAddModal = () => {
       editingEntryId.value = null;
       formOpTitle.value = '';
@@ -891,6 +923,7 @@ createApp({
             if (data.wipLimit) wipLimit.value = data.wipLimit;
             persist();
             alert('База данных успешно загружена!');
+            showDataModal.value = false;
           } else {
             alert('Некорректный файл бэкапа.');
           }
@@ -909,7 +942,7 @@ createApp({
     };
 
     return {
-      activeTab, currentTimeStr, wipLimit, wipCount, wipTasks, isCurrentTaskWip,
+      activeTab, showDataModal, currentTimeStr, wipLimit, wipCount, wipTasks, isCurrentTaskWip,
       goals, tasks, entries, currentOpTitle, currentGoalId, currentTaskId,
       availableTasks, activeTimer, activeElapsedSeconds, isPomodoroMode,
       newGoalName, newGoalDeadline, newTaskNames, newTaskDeadlines,

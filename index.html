@@ -83,7 +83,6 @@
         <span class="text-[11px] font-mono-digits text-zinc-500">Всего: {{ formatDuration(todayTotalSec) }}</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <!-- Блок WIP времени -->
         <div class="bg-zinc-900/80 border border-amber-500/20 rounded-xl p-2.5 flex flex-col justify-between">
           <div class="text-[10px] font-semibold uppercase text-amber-400/90 flex items-center space-x-1">
             <span>⭐ По целям WIP</span>
@@ -93,7 +92,6 @@
           </div>
         </div>
 
-        <!-- Блок времени без цели -->
         <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-2.5 flex flex-col justify-between">
           <div class="text-[10px] font-semibold uppercase text-zinc-400 flex items-center space-x-1">
             <span>⚪ Без цели / Рутина</span>
@@ -137,10 +135,10 @@
         </div>
       </div>
 
-      <label class="flex items-center space-x-2 text-xs text-zinc-400 cursor-pointer pt-0.5">
-        <input type="checkbox" v-model="currentOpIsWip" :disabled="activeTimer !== null" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0">
-        <span>Отметить операцию как приоритетный WIP-фокус</span>
-      </label>
+      <!-- Автоматический индикатор WIP задачи -->
+      <div v-if="isCurrentTaskWip" class="flex items-center space-x-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-xl font-medium">
+        <span>⭐ Выбрана задача из фокуса WIP (статус присвоится автоматически)</span>
+      </div>
 
       <!-- Кнопки управления -->
       <div class="grid grid-cols-1 gap-2 pt-1">
@@ -229,7 +227,7 @@
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2">
       <div class="flex justify-between items-center">
         <h3 class="text-xs font-bold uppercase text-zinc-400">Лимит WIP-фокуса (1 - 5)</h3>
-        <span class="text-xs font-mono-digits font-bold text-amber-400">{{ wipLimit }} в работе</span>
+        <span class="text-xs font-mono-digits font-bold text-amber-400">{{ wipLimit }} задач в работе</span>
       </div>
       <div class="flex justify-between space-x-2 pt-1">
         <button v-for="n in [1,2,3,4,5]" :key="n" @click="setWipLimit(n)"
@@ -240,36 +238,39 @@
       </div>
     </div>
 
-    <!-- 2. Создание новой Цели + Кайдзен-подсказка об измеримости -->
+    <!-- 2. Создание новой Цели + Подсказка -->
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
       <h3 class="text-xs font-bold uppercase text-zinc-400">+ Создать новую цель</h3>
       
-      <!-- Подсказка SMART / Kaizen -->
       <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-[11px] text-amber-300/90 leading-relaxed">
-        💡 <strong>Кайдзен-совет:</strong> Формулируйте цель <u>измеримо</u>. Вместо абстрактного <em>«Учить английский»</em> пишите: <em>«Пройти 30 уроков»</em> или <em>«Выучить 500 слов»</em>.
+        💡 <strong>Кайдзен-совет:</strong> Формулируйте цель <u>измеримо</u>. Вместо <em>«Учить английский»</em> пишите: <em>«Пройти 30 уроков»</em> или <em>«Выучить 500 слов»</em>.
       </div>
 
       <form @submit.prevent="addGoal" class="space-y-2">
         <input v-model="newGoalName" placeholder="Название цели (измеримое)..." 
                class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-        <div class="flex space-x-2">
-          <input type="date" v-model="newGoalDeadline" title="Дедлайн цели (опционально)"
-                 class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-300">
-          <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-xl text-xs font-bold text-white">Добавить цель</button>
+        
+        <div class="space-y-1">
+          <label class="block text-[11px] text-zinc-400">📅 Введите срок завершения (опционально):</label>
+          <div class="flex space-x-2">
+            <input type="date" v-model="newGoalDeadline" title="Введите срок завершения"
+                   class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-300">
+            <button type="submit" class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-xl text-xs font-bold text-white">Добавить цель</button>
+          </div>
         </div>
       </form>
     </div>
 
-    <!-- 3. Дерево: Цели -> Задачи (с кнопками редактирования ✏️) -->
+    <!-- 3. Дерево: Цели -> Задачи -->
     <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
       <div v-for="goal in goals" :key="goal.id" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow">
         
-        <!-- Заголовок цели с кнопкой редактирования -->
+        <!-- Заголовок цели -->
         <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
           <div class="min-w-0 flex-1 mr-2">
             <span class="text-xs font-bold text-amber-400 truncate block">🎯 {{ goal.name || 'Цель без названия' }}</span>
             <span v-if="goal.deadline" class="text-[10px] text-zinc-500 flex items-center space-x-1 mt-0.5">
-              <span>📅 Дедлайн: {{ formatDateShort(goal.deadline) }}</span>
+              <span>📅 Срок: {{ formatDateShort(goal.deadline) }}</span>
             </span>
           </div>
           <div class="flex items-center space-x-1">
@@ -280,11 +281,11 @@
           </div>
         </div>
 
-        <!-- Список задач внутри цели с кнопкой редактирования -->
+        <!-- Список задач -->
         <div class="space-y-1.5 pl-1">
           <div v-for="task in getTasksByGoal(goal.id)" :key="task.id" class="flex items-center justify-between bg-zinc-950 p-2 rounded-xl border border-zinc-800 text-xs">
             <div class="min-w-0 flex-1 flex items-center space-x-2 mr-2">
-              <label class="flex items-center space-x-1.5 cursor-pointer min-w-0">
+              <label class="flex items-center space-x-1.5 cursor-pointer min-w-0" title="Отметить как WIP-фокус">
                 <input type="checkbox" :checked="task.isWip" @change="toggleTaskWip(task)" class="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0">
                 <span :class="task.isWip ? 'text-amber-400 font-semibold' : 'text-zinc-300'" class="truncate">{{ task.name || 'Задача без названия' }}</span>
               </label>
@@ -301,16 +302,20 @@
           <div v-if="getTasksByGoal(goal.id).length === 0" class="text-[11px] text-zinc-600 italic py-0.5">Нет задач в этой цели</div>
         </div>
 
-        <!-- Кнопка добавления задачи ВНИЗУ карточки цели -->
+        <!-- Добавление задачи ВНИЗУ карточки цели -->
         <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
           <input v-model="newTaskNames[goal.id]" placeholder="Название новой задачи..."
                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
-          <div class="flex space-x-2">
-            <input type="date" v-model="newTaskDeadlines[goal.id]" title="Дедлайн задачи"
-                   class="flex-1 bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-zinc-300">
-            <button @click="addTaskToGoal(goal.id)" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white whitespace-nowrap">
-              + Задача
-            </button>
+          
+          <div>
+            <label class="block text-[10px] text-zinc-400 mb-0.5">📅 Введите срок завершения:</label>
+            <div class="flex space-x-2">
+              <input type="date" v-model="newTaskDeadlines[goal.id]" title="Введите срок завершения"
+                     class="flex-1 bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-zinc-300">
+              <button @click="addTaskToGoal(goal.id)" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white whitespace-nowrap">
+                + Задача
+              </button>
+            </div>
           </div>
         </div>
 
@@ -342,8 +347,8 @@
           <input v-model="editGoalForm.name" placeholder="Измеримая цель..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дедлайн</label>
-          <input type="date" v-model="editGoalForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">📅 Введите срок завершения</label>
+          <input type="date" v-model="editGoalForm.deadline" title="Введите срок завершения" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
       </div>
       <div class="flex space-x-2 pt-2">
@@ -369,8 +374,8 @@
           </select>
         </div>
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дедлайн</label>
-          <input type="date" v-model="editTaskForm.deadline" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+          <label class="block text-[11px] text-zinc-400 uppercase mb-1">📅 Введите срок завершения</label>
+          <input type="date" v-model="editTaskForm.deadline" title="Введите срок завершения" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
         </div>
       </div>
       <div class="flex space-x-2 pt-2">
@@ -405,7 +410,7 @@
             <label class="block text-[11px] text-zinc-400 uppercase mb-1">Задача</label>
             <select v-model="formTaskId" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-1.5 text-xs text-white truncate">
               <option value="">-- Без задачи --</option>
-              <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
+              <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.isWip ? '⭐ ' : '' }}{{ t.name }}</option>
             </select>
           </div>
         </div>
@@ -425,11 +430,6 @@
           <label class="block text-[11px] text-zinc-400 uppercase mb-1">Дата</label>
           <input type="date" v-model="formDate" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-1.5 text-xs text-white">
         </div>
-
-        <label class="flex items-center space-x-2 text-xs text-zinc-300 cursor-pointer pt-1">
-          <input type="checkbox" v-model="formIsWip" class="rounded bg-zinc-950 border-zinc-700 text-amber-500 focus:ring-0">
-          <span>Отметка WIP</span>
-        </label>
       </div>
 
       <div class="flex space-x-2 pt-2">
@@ -473,7 +473,6 @@ createApp({
     const currentOpTitle = ref('');
     const currentGoalId = ref('');
     const currentTaskId = ref('');
-    const currentOpIsWip = ref(false);
 
     // Состояние таймера
     const activeTimer = ref(JSON.parse(localStorage.getItem('chrono_active_timer_v3')) || null);
@@ -504,7 +503,6 @@ createApp({
     const formStartTime = ref('');
     const formEndTime = ref('');
     const formDate = ref(new Date().toISOString().split('T')[0]);
-    const formIsWip = ref(false);
 
     let timerInterval = null;
 
@@ -550,7 +548,14 @@ createApp({
     // Вычисляемые списки и аналитика за день
     const currentTimeStr = computed(() => currentTime.value.toTimeString().split(' ')[0]);
     const wipTasks = computed(() => tasks.value.filter(t => t.isWip));
-    const wipCount = computed(() => wipTasks.value.length + (activeTimer.value?.isWip ? 1 : 0));
+    const wipCount = computed(() => wipTasks.value.length);
+
+    // Автоматическая проверка: является ли выбранная задача WIP
+    const isCurrentTaskWip = computed(() => {
+      if (!currentTaskId.value) return false;
+      const t = tasks.value.find(x => x.id === currentTaskId.value);
+      return t ? !!t.isWip : false;
+    });
 
     // Аналитика дня
     const todayEntries = computed(() => {
@@ -655,11 +660,15 @@ createApp({
     // Таймер
     const startTimer = (pomodoro = false) => {
       isPomodoroMode.value = pomodoro;
+      
+      const task = tasks.value.find(t => t.id === currentTaskId.value);
+      const isWipAuto = task ? !!task.isWip : false;
+
       activeTimer.value = {
         title: currentOpTitle.value.trim() || (pomodoro ? 'Помодоро-сессия' : 'Операция'),
         goalId: currentGoalId.value,
         taskId: currentTaskId.value,
-        isWip: currentOpIsWip.value,
+        isWip: isWipAuto,
         startTime: new Date().toISOString(),
         isPomodoro: pomodoro
       };
@@ -708,7 +717,6 @@ createApp({
       currentOpTitle.value = current.title;
       currentGoalId.value = current.goalId;
       currentTaskId.value = current.taskId;
-      currentOpIsWip.value = current.isWip;
       startTimer(current.isPomodoro);
     };
 
@@ -738,7 +746,6 @@ createApp({
       if (g) {
         g.name = editGoalForm.name.trim() || 'Цель без названия';
         g.deadline = editGoalForm.deadline || '';
-        // обновляем снимки в истории
         entries.value.forEach(e => {
           if (e.goalId === g.id) e.goalName = g.name;
         });
@@ -786,7 +793,6 @@ createApp({
         t.name = editTaskForm.name.trim() || 'Задача без названия';
         t.goalId = editTaskForm.goalId;
         t.deadline = editTaskForm.deadline || '';
-        // обновляем снимки в истории
         entries.value.forEach(e => {
           if (e.taskId === t.id) {
             e.taskName = t.name;
@@ -824,7 +830,6 @@ createApp({
       formEndTime.value = now.toTimeString().split(' ')[0];
       formStartTime.value = new Date(now.getTime() - 15 * 60000).toTimeString().split(' ')[0];
       formDate.value = now.toISOString().split('T')[0];
-      formIsWip.value = false;
       showModal.value = true;
     };
 
@@ -838,7 +843,6 @@ createApp({
       formStartTime.value = startD.toTimeString().split(' ')[0];
       formEndTime.value = endD.toTimeString().split(' ')[0];
       formDate.value = startD.toISOString().split('T')[0];
-      formIsWip.value = !!entry.isWip;
       showModal.value = true;
     };
 
@@ -848,7 +852,9 @@ createApp({
       const dur = Math.max(1, Math.floor((new Date(endISO) - new Date(startISO)) / 1000));
       
       const goalName = getGoalName(formGoalId.value);
-      const taskName = getTaskName(formTaskId.value);
+      const task = tasks.value.find(t => t.id === formTaskId.value);
+      const taskName = task ? task.name : '';
+      const isWipAuto = task ? !!task.isWip : false;
 
       if (editingEntryId.value) {
         const idx = entries.value.findIndex(e => e.id === editingEntryId.value);
@@ -863,7 +869,7 @@ createApp({
             startTime: startISO,
             endTime: endISO,
             durationSeconds: dur,
-            isWip: formIsWip.value
+            isWip: isWipAuto
           };
         }
       } else {
@@ -877,7 +883,7 @@ createApp({
           startTime: startISO,
           endTime: endISO,
           durationSeconds: dur,
-          isWip: formIsWip.value,
+          isWip: isWipAuto,
           isPomodoro: false
         });
       }
@@ -949,14 +955,14 @@ createApp({
     };
 
     return {
-      activeTab, currentTimeStr, wipLimit, wipCount, wipTasks,
-      goals, tasks, entries, currentOpTitle, currentGoalId, currentTaskId, currentOpIsWip,
+      activeTab, currentTimeStr, wipLimit, wipCount, wipTasks, isCurrentTaskWip,
+      goals, tasks, entries, currentOpTitle, currentGoalId, currentTaskId,
       availableTasks, activeTimer, activeElapsedSeconds, isPomodoroMode,
       todayWipSec, todayNoGoalSec, todayTotalSec,
       newGoalName, newGoalDeadline, newTaskNames, newTaskDeadlines,
       showEditGoalModal, editGoalForm, openEditGoalModal, saveGoalEdit,
       showEditTaskModal, editTaskForm, openEditTaskModal, saveTaskEdit,
-      showModal, editingEntryId, formOpTitle, formGoalId, formTaskId, formStartTime, formEndTime, formDate, formIsWip,
+      showModal, editingEntryId, formOpTitle, formGoalId, formTaskId, formStartTime, formEndTime, formDate,
       getGoalName, getTaskName, getTasksByGoal, formatDateShort, formatDuration, formatTimeHM, formatPomodoroCountdown,
       onGoalChange, setWipLimit, toggleTaskWip, toggleTimer, splitInterval, startPomodoro,
       addGoal, deleteGoal, addTaskToGoal, deleteTask, deleteEntry,

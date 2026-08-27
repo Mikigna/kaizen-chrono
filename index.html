@@ -86,19 +86,19 @@
       </div>
     </div>
 
-    <!-- 2. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 shadow-md">
+    <!-- 2. БЛОК ВВОДА ОПЕРАЦИИ И ПРИВЯЗКИ (ВЫДЕЛЕН СВЕТЛЫМ ТОНОМ) -->
+    <div class="bg-zinc-800/90 border border-zinc-700/90 rounded-2xl p-4 space-y-3 shadow-xl ring-1 ring-zinc-700/50">
       <div>
-        <label class="block text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-1">Текущая операция</label>
+        <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Текущая операция</label>
         <input v-model="currentOpTitle" :disabled="activeTimer !== null" placeholder="Что делаете прямо сейчас?"
-               class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 disabled:opacity-60">
+               class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-500 disabled:opacity-60 transition">
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Привязать к цели</label>
+          <label class="block text-[11px] font-medium text-zinc-300 uppercase mb-1">Привязать к цели</label>
           <select v-model="currentGoalId" :disabled="activeTimer !== null" @change="onGoalChange"
-                  class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 truncate">
+                  class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 truncate transition">
             <option value="">-- Без цели --</option>
             <option v-for="g in goals" :key="g.id" :value="g.id">
               {{ g.name || 'Без названия' }} {{ g.deadline ? `(до ${formatDateShort(g.deadline)})` : '' }}
@@ -107,9 +107,9 @@
         </div>
 
         <div>
-          <label class="block text-[11px] text-zinc-400 uppercase mb-1">Привязать к задаче</label>
+          <label class="block text-[11px] font-medium text-zinc-300 uppercase mb-1">Привязать к задаче</label>
           <select v-model="currentTaskId" :disabled="activeTimer !== null"
-                  class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 truncate">
+                  class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 disabled:opacity-60 truncate transition">
             <option value="">-- Без задачи --</option>
             <option v-for="t in availableTasks" :key="t.id" :value="t.id">
               {{ t.isWip ? '⭐ ' : '' }}{{ t.name || 'Без названия' }} {{ t.deadline ? `(до ${formatDateShort(t.deadline)})` : '' }}
@@ -119,7 +119,7 @@
       </div>
 
       <!-- Автоматический индикатор WIP задачи -->
-      <div v-if="isCurrentTaskWip" class="flex items-center space-x-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-xl font-medium">
+      <div v-if="isCurrentTaskWip" class="flex items-center space-x-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1.5 rounded-xl font-medium">
         <span>⭐ Задача в фокусе на сегодня (WIP)</span>
       </div>
 
@@ -141,9 +141,9 @@
           </button>
         </div>
 
-        <!-- Кнопка Помодоро с отображением операции -->
+        <!-- Кнопка Помодоро -->
         <button v-if="!activeTimer" @click="startPomodoro" 
-                class="w-full bg-zinc-800 hover:bg-zinc-700 active:scale-95 py-2.5 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/20 transition flex items-center justify-center space-x-2 truncate px-3">
+                class="w-full bg-zinc-900/90 hover:bg-zinc-900 active:scale-95 py-2.5 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/30 transition flex items-center justify-center space-x-2 truncate px-3">
           <span>🍅 Запустить Помодоро (25 мин)</span>
           <span v-if="currentOpTitle" class="text-zinc-400 font-normal truncate max-w-[150px]">• {{ currentOpTitle }}</span>
         </button>
@@ -223,9 +223,9 @@
       </div>
     </div>
 
-    <!-- 2. Создание новой Цели -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2.5">
-      <h3 class="text-xs font-bold uppercase text-zinc-400">+ Создать новую цель</h3>
+    <!-- 2. Создание новой Цели (ВЫДЕЛЕНО СВЕТЛЫМ ТОНОМ) -->
+    <div class="bg-zinc-800/90 border border-zinc-700/90 rounded-2xl p-4 space-y-2.5 shadow-md ring-1 ring-zinc-700/40">
+      <h3 class="text-xs font-bold uppercase text-amber-400">+ Создать новую цель</h3>
       
       <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-[11px] text-amber-300/90 leading-relaxed">
         💡 <strong>Кайдзен-совет:</strong> Формулируйте цель <u>измеримо</u>. Вместо <em>«Учить английский»</em> пишите: <em>«Пройти 30 уроков»</em> или <em>«Выучить 500 слов»</em>.
@@ -233,7 +233,7 @@
 
       <form @submit.prevent="addGoal" class="space-y-2">
         <input v-model="newGoalName" placeholder="Название цели (измеримое)..." 
-               class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+               class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition">
         
         <div class="flex items-center space-x-2">
           <!-- Компактное поле даты -->
@@ -242,7 +242,7 @@
             <input type="date" v-model="newGoalDeadline" title="Срок завершения"
                    class="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-1 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500">
           </div>
-          <button type="submit" class="flex-1 shrink-0 bg-zinc-700 hover:bg-zinc-600 py-2 rounded-xl text-xs font-bold text-white transition">
+          <button type="submit" class="flex-1 shrink-0 bg-zinc-700 hover:bg-zinc-600 py-2 rounded-xl text-xs font-bold text-white transition shadow">
             Добавить цель
           </button>
         </div>
@@ -295,7 +295,7 @@
           <div v-if="getTasksByGoal(goal.id).length === 0" class="text-[11px] text-zinc-600 italic py-0.5">Нет задач в этой цели</div>
         </div>
 
-        <!-- Добавление задачи ВНИЗУ карточки цели (без наложения кнопки) -->
+        <!-- Добавление задачи ВНИЗУ карточки цели -->
         <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
           <input v-model="newTaskNames[goal.id]" placeholder="Название новой задачи..."
                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
@@ -316,7 +316,7 @@
     </div>
   </main>
 
-  <!-- ==================== МОДАЛКА: ДАННЫЕ И БЭКАП (ВЫЗЫВАЕТСЯ ИЗ ШАПКИ) ==================== -->
+  <!-- ==================== МОДАЛКА: ДАННЫЕ И БЭКАП ==================== -->
   <div v-if="showDataModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 w-full max-w-xs space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b border-zinc-800 pb-2">

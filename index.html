@@ -73,7 +73,7 @@
     <div class="bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden">
       <div v-if="activeTimer && isPomodoroMode" class="text-xs uppercase font-bold tracking-widest text-rose-400 mb-1 flex items-center justify-center space-x-1">
         <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-        <span class="truncate max-w-[280px]">🍅 {{ activeTimer.title }}</span>
+        <span class="truncate max-w-[280px]">⏱ {{ activeTimer.title }}</span>
       </div>
       <div v-else-if="activeTimer" class="text-xs uppercase font-bold tracking-widest text-emerald-400 mb-1 flex items-center justify-center space-x-1">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -141,12 +141,19 @@
           </button>
         </div>
 
-        <!-- Кнопка Помодоро -->
-        <button v-if="!activeTimer" @click="startPomodoro" 
-                class="w-full bg-zinc-900/90 hover:bg-zinc-900 active:scale-95 py-2.5 rounded-xl font-semibold text-xs text-rose-300 border border-rose-500/30 transition flex items-center justify-center space-x-2 truncate px-3">
-          <span>🍅 Запустить Помодоро (25 мин)</span>
-          <span v-if="currentOpTitle" class="text-zinc-400 font-normal truncate max-w-[150px]">• {{ currentOpTitle }}</span>
-        </button>
+        <!-- 4 КНОПКИ ТАЙМЕРА ФОКУСА (5 / 10 / 15 / 30 МИН) -->
+        <div v-if="!activeTimer" class="pt-1">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-1.5 flex justify-between items-center px-0.5">
+            <span>⏱ Быстрый таймер</span>
+            <span v-if="currentOpTitle" class="text-amber-400/90 font-normal truncate max-w-[170px]">«{{ currentOpTitle }}»</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button v-for="mins in [5, 10, 15, 30]" :key="mins" @click="startPresetTimer(mins)"
+                    class="bg-zinc-900/90 hover:bg-zinc-950 active:scale-95 py-2 rounded-xl font-bold text-xs text-rose-300 border border-rose-500/25 hover:border-rose-500/50 transition flex flex-col items-center justify-center shadow-sm">
+              <span>{{ mins }} мин</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -167,7 +174,7 @@
           <div class="min-w-0 flex-1 mr-2">
             <div class="flex items-center space-x-1.5 flex-wrap">
               <span v-if="entry.isWip" class="text-[10px] font-bold bg-amber-500/20 text-amber-400 px-1 rounded">WIP</span>
-              <span v-if="entry.isPomodoro" class="text-[10px]">🍅</span>
+              <span v-if="entry.isPomodoro" class="text-[10px]">⏱</span>
               <span class="text-sm font-semibold text-zinc-200 truncate">{{ entry.title || 'Операция без названия' }}</span>
             </div>
             
@@ -203,8 +210,11 @@
   <main v-if="activeTab === 'settings'" class="flex-1 flex flex-col space-y-4">
     <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
       <h2 class="text-sm font-bold uppercase tracking-wider text-white">Цели и Задачи</h2>
-      <button @click="activeTab = 'main'" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded-lg">
-        ← К таймеру
+      
+      <!-- Кнопка «← К таймеру» выделена зеленым цветом Старта -->
+      <button @click="activeTab = 'main'" 
+              class="text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl shadow-lg transition active:scale-95 flex items-center space-x-1">
+        <span>← К таймеру</span>
       </button>
     </div>
 
@@ -223,7 +233,7 @@
       </div>
     </div>
 
-    <!-- 2. Создание новой Цели (ВЫДЕЛЕНО СВЕТЛЫМ ТОНОМ) -->
+    <!-- 2. Создание новой Цели -->
     <div class="bg-zinc-800/90 border border-zinc-700/90 rounded-2xl p-4 space-y-2.5 shadow-md ring-1 ring-zinc-700/40">
       <h3 class="text-xs font-bold uppercase text-amber-400">+ Создать новую цель</h3>
       
@@ -488,7 +498,7 @@ createApp({
     const activeTimer = ref(JSON.parse(localStorage.getItem('chrono_active_timer_v3')) || null);
     const activeElapsedSeconds = ref(0);
     const isPomodoroMode = ref(false);
-    const pomodoroDuration = 25 * 60; // 25 минут
+    const currentTargetDuration = ref(1500);
 
     // Поля создания
     const newGoalName = ref('');
@@ -516,7 +526,7 @@ createApp({
 
     let timerInterval = null;
 
-    // Звуковой сигнал Помодоро (Web Audio API)
+    // Звуковой сигнал зуммера (Web Audio API)
     const playBeep = () => {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -540,10 +550,12 @@ createApp({
         const now = currentTime.value.getTime();
         activeElapsedSeconds.value = Math.max(0, Math.floor((now - start) / 1000));
 
-        if (activeTimer.value.isPomodoro && activeElapsedSeconds.value >= pomodoroDuration) {
+        const target = activeTimer.value.targetDuration || currentTargetDuration.value;
+        if (activeTimer.value.isPomodoro && activeElapsedSeconds.value >= target) {
           playBeep();
+          const mins = Math.round(target / 60);
           stopTimer();
-          alert('🍅 Помодоро завершено! Сделайте 5-минутный перерыв.');
+          alert(`⏱ Таймер фокуса (${mins} мин) завершен! Сделайте короткий перерыв.`);
         }
       }
     };
@@ -606,7 +618,8 @@ createApp({
     };
 
     const formatPomodoroCountdown = () => {
-      const remain = Math.max(0, pomodoroDuration - activeElapsedSeconds.value);
+      const target = activeTimer.value?.targetDuration || currentTargetDuration.value;
+      const remain = Math.max(0, target - activeElapsedSeconds.value);
       const m = String(Math.floor(remain / 60)).padStart(2, '0');
       const s = String(remain % 60).padStart(2, '0');
       return `${m}:${s}`;
@@ -643,20 +656,39 @@ createApp({
       persist();
     };
 
-    // Таймер
-    const startTimer = (pomodoro = false) => {
-      isPomodoroMode.value = pomodoro;
+    // Таймер хронометража
+    const startTimer = () => {
+      isPomodoroMode.value = false;
+      const task = tasks.value.find(t => t.id === currentTaskId.value);
+      const isWipAuto = task ? !!task.isWip : false;
+
+      activeTimer.value = {
+        title: currentOpTitle.value.trim() || 'Операция',
+        goalId: currentGoalId.value,
+        taskId: currentTaskId.value,
+        isWip: isWipAuto,
+        startTime: new Date().toISOString(),
+        isPomodoro: false
+      };
+      persist();
+    };
+
+    // Быстрый таймер на 5/10/15/30 мин
+    const startPresetTimer = (minutes) => {
+      isPomodoroMode.value = true;
+      currentTargetDuration.value = minutes * 60;
       
       const task = tasks.value.find(t => t.id === currentTaskId.value);
       const isWipAuto = task ? !!task.isWip : false;
 
       activeTimer.value = {
-        title: currentOpTitle.value.trim() || (pomodoro ? 'Помодоро-сессия' : 'Операция'),
+        title: currentOpTitle.value.trim() || `Таймер (${minutes} мин)`,
         goalId: currentGoalId.value,
         taskId: currentTaskId.value,
         isWip: isWipAuto,
         startTime: new Date().toISOString(),
-        isPomodoro: pomodoro
+        isPomodoro: true,
+        targetDuration: minutes * 60
       };
       persist();
     };
@@ -693,7 +725,7 @@ createApp({
 
     const toggleTimer = () => {
       if (activeTimer.value) stopTimer();
-      else startTimer(false);
+      else startTimer();
     };
 
     const splitInterval = () => {
@@ -703,10 +735,13 @@ createApp({
       currentOpTitle.value = current.title;
       currentGoalId.value = current.goalId;
       currentTaskId.value = current.taskId;
-      startTimer(current.isPomodoro);
+      
+      if (current.isPomodoro && current.targetDuration) {
+        startPresetTimer(Math.round(current.targetDuration / 60));
+      } else {
+        startTimer();
+      }
     };
-
-    const startPomodoro = () => startTimer(true);
 
     // CRUD целей
     const addGoal = () => {
@@ -881,7 +916,7 @@ createApp({
 
     // Экспорт / Импорт
     const exportCSV = () => {
-      let csv = '\uFEFFДата;Начало;Конец;Длительность;Операция;Задача;Цель;WIP;Помодоро\n';
+      let csv = '\uFEFFДата;Начало;Конец;Длительность;Операция;Задача;Цель;WIP;Таймер\n';
       entries.value.forEach(e => {
         const d = e.startTime.split('T')[0];
         const st = formatTimeHM(e.startTime);
@@ -950,7 +985,7 @@ createApp({
       showEditTaskModal, editTaskForm, openEditTaskModal, saveTaskEdit,
       showModal, editingEntryId, formOpTitle, formGoalId, formTaskId, formStartTime, formEndTime, formDate,
       getGoalName, getTaskName, getTasksByGoal, formatDateShort, formatDuration, formatTimeHM, formatPomodoroCountdown,
-      onGoalChange, setWipLimit, toggleTaskWip, toggleTimer, splitInterval, startPomodoro,
+      onGoalChange, setWipLimit, toggleTaskWip, toggleTimer, splitInterval, startPresetTimer,
       addGoal, deleteGoal, addTaskToGoal, deleteTask, deleteEntry,
       openManualAddModal, editEntry, saveManualEntry, exportCSV, exportJSON, importJSON, resetAllData
     };
